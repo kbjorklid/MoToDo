@@ -37,8 +37,7 @@ public class ToDoListsControllerPostTests : BaseSystemTest, IAsyncLifetime
         Assert.NotEqual(Guid.Empty, result.ToDoListId);
         Assert.Equal(Guid.Parse(command.UserId), result.UserId);
         Assert.Equal("My Shopping List", result.Title);
-        Assert.True(result.CreatedAt <= DateTime.UtcNow);
-        Assert.True(result.CreatedAt >= DateTime.UtcNow.AddMinutes(-1));
+        Assert.Equal(FakeTimeProvider.GetUtcNow().UtcDateTime, result.CreatedAt);
 
         // Verify Location header is set correctly
         Assert.NotNull(response.Headers.Location);

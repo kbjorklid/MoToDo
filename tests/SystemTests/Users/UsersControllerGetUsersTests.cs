@@ -61,7 +61,7 @@ public class UsersControllerGetUsersTests : BaseSystemTest
         Assert.NotEqual(Guid.Empty, firstUser.UserId);
         Assert.Contains("@example.com", firstUser.Email);
         Assert.NotEmpty(firstUser.UserName);
-        Assert.True(firstUser.CreatedAt <= DateTime.UtcNow);
+        Assert.Equal(FakeTimeProvider.GetUtcNow().UtcDateTime, firstUser.CreatedAt);
         Assert.Null(firstUser.LastLoginAt);
     }
 
@@ -244,13 +244,12 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     [Fact]
     public async Task GetUsers_WithNoSortParameter_ReturnsUsersOrderedByCreatedAtAscending()
     {
-        // Arrange
-        DateTime baseTime = DateTime.UtcNow.AddMinutes(-10);
+        // Arrange - Create users at different times using FakeTimeProvider for deterministic sorting
         await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user1@example.com")
             .WithUserName("user1")
             .Build());
-        await Task.Delay(100); // Ensure different timestamps
+        FakeTimeProvider.Advance(TimeSpan.FromMinutes(1)); // Advance time by 1 minute
         await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user2@example.com")
             .WithUserName("user2")
@@ -400,21 +399,20 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     [Fact]
     public async Task GetUsers_WithSortByCreatedAtAscending_ReturnsUsersSortedByCreatedAtAscending()
     {
-        // Arrange
-        DateTime baseTime = DateTime.UtcNow.AddMinutes(-10);
+        // Arrange - Create users at different times using FakeTimeProvider for deterministic sorting
         await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
-            .WithEmail("latest@example.com")
-            .WithUserName("latest")
+            .WithEmail("first@example.com")
+            .WithUserName("first")
             .Build());
-        await Task.Delay(100); // Ensure different timestamps
+        FakeTimeProvider.Advance(TimeSpan.FromMinutes(1));
         await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
-            .WithEmail("middle@example.com")
-            .WithUserName("middle")
+            .WithEmail("second@example.com")
+            .WithUserName("second")
             .Build());
-        await Task.Delay(100);
+        FakeTimeProvider.Advance(TimeSpan.FromMinutes(1));
         await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
-            .WithEmail("earliest@example.com")
-            .WithUserName("earliest")
+            .WithEmail("third@example.com")
+            .WithUserName("third")
             .Build());
 
         // Act
@@ -434,17 +432,17 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     [Fact]
     public async Task GetUsers_WithSortByCreatedAtDescending_ReturnsUsersSortedByCreatedAtDescending()
     {
-        // Arrange
+        // Arrange - Create users at different times using FakeTimeProvider for deterministic sorting
         await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("oldest@example.com")
             .WithUserName("oldest")
             .Build());
-        await Task.Delay(100); // Ensure different timestamps
+        FakeTimeProvider.Advance(TimeSpan.FromMinutes(1));
         await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("middle@example.com")
             .WithUserName("middle")
             .Build());
-        await Task.Delay(100);
+        FakeTimeProvider.Advance(TimeSpan.FromMinutes(1));
         await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("newest@example.com")
             .WithUserName("newest")
@@ -520,12 +518,12 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     [Fact]
     public async Task GetUsers_WithUnknownSortField_ReturnsUsersOrderedByCreatedAtAscending()
     {
-        // Arrange
+        // Arrange - Create users at different times using FakeTimeProvider for deterministic sorting
         await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user1@example.com")
             .WithUserName("user1")
             .Build());
-        await Task.Delay(100); // Ensure different timestamps
+        FakeTimeProvider.Advance(TimeSpan.FromMinutes(1));
         await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user2@example.com")
             .WithUserName("user2")
@@ -585,12 +583,12 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     [Fact]
     public async Task GetUsers_WithEmptySort_ReturnsUsersOrderedByCreatedAtAscending()
     {
-        // Arrange
+        // Arrange - Create users at different times using FakeTimeProvider for deterministic sorting
         await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user1@example.com")
             .WithUserName("user1")
             .Build());
-        await Task.Delay(100);
+        FakeTimeProvider.Advance(TimeSpan.FromMinutes(1));
         await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user2@example.com")
             .WithUserName("user2")
@@ -612,12 +610,12 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     [Fact]
     public async Task GetUsers_WithWhitespaceSort_ReturnsUsersOrderedByCreatedAtAscending()
     {
-        // Arrange
+        // Arrange - Create users at different times using FakeTimeProvider for deterministic sorting
         await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user1@example.com")
             .WithUserName("user1")
             .Build());
-        await Task.Delay(100);
+        FakeTimeProvider.Advance(TimeSpan.FromMinutes(1));
         await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user2@example.com")
             .WithUserName("user2")

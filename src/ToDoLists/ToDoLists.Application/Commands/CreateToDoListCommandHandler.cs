@@ -13,7 +13,8 @@ public static class CreateToDoListCommandHandler
     /// Handles the command to create a new todo list using Wolverine's preferred static method pattern.
     /// </summary>
     /// <param name="command">The create todo list command containing user ID and title.</param>
-    /// <param name="toDoListRepository">The todo list repository injected by Wolverine.</param>
+    /// <param name="toDoListRepository">The todo list repository.</param>
+    /// <param name="timeProvider">Time provider</param>
     /// <param name="cancellationToken">Cancellation token to cancel the operation if needed.</param>
     /// <returns>A Result containing the CreateToDoListResult if successful, or an error if validation fails.</returns>
     public static async Task<Result<CreateToDoListResult>> Handle(

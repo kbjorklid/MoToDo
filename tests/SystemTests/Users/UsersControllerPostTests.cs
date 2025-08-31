@@ -34,8 +34,7 @@ public class UsersControllerPostTests : BaseSystemTest
         Assert.NotEqual(Guid.Empty, result.UserId);
         Assert.Equal("john.doe@example.com", result.Email);
         Assert.Equal("johndoe", result.UserName);
-        Assert.True(result.CreatedAt <= DateTime.UtcNow);
-        Assert.True(result.CreatedAt >= DateTime.UtcNow.AddMinutes(-1));
+        Assert.Equal(FakeTimeProvider.GetUtcNow().UtcDateTime, result.CreatedAt);
 
         // Verify Location header is set correctly
         Assert.NotNull(response.Headers.Location);

@@ -33,8 +33,7 @@ public class UsersControllerGetUserTests : BaseSystemTest
         Assert.Equal(userId, userDto.UserId);
         Assert.Equal("john.doe@example.com", userDto.Email);
         Assert.Equal("johndoe", userDto.UserName);
-        Assert.True(userDto.CreatedAt <= DateTime.UtcNow);
-        Assert.True(userDto.CreatedAt >= DateTime.UtcNow.AddMinutes(-1));
+        Assert.Equal(FakeTimeProvider.GetUtcNow().UtcDateTime, userDto.CreatedAt);
         Assert.Null(userDto.LastLoginAt);
     }
 

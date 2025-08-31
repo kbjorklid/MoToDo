@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Time.Testing;
 using Testcontainers.PostgreSql;
 using ToDoLists.Infrastructure;
 using Users.Infrastructure;
@@ -18,6 +19,7 @@ public class DatabaseFixture : IAsyncLifetime
 {
     public PostgreSqlContainer DbContainer { get; private set; } = null!;
     public WebApplicationFactory<Program> WebAppFactory { get; private set; } = null!;
+    public FakeTimeProvider FakeTimeProvider { get; private set; } = null!;
 
     public async Task InitializeAsync()
     {
@@ -36,6 +38,9 @@ public class DatabaseFixture : IAsyncLifetime
         // Get the dynamic connection string from the container
         string containerConnectionString = DbContainer.GetConnectionString();
 
+        // Initialize FakeTimeProvider with a fixed test time for deterministic behavior
+        FakeTimeProvider = new FakeTimeProvider(new DateTimeOffset(2024, 1, 1, 12, 0, 0, TimeSpan.Zero));
+
         // Create WebApplicationFactory after container is started
         WebAppFactory = new WebApplicationFactory<Program>()
             .WithWebHostBuilder(builder =>
@@ -43,6 +48,13 @@ public class DatabaseFixture : IAsyncLifetime
                 // Use UseSetting to override connection string during host building
                 // This ensures the connection string is available when Program.cs calls GetConnectionString
                 builder.UseSetting("ConnectionStrings:DefaultConnection", containerConnectionString);
+
+                builder.ConfigureServices(services =>
+                {
+                    // Replace the real TimeProvider with our FakeTimeProvider for deterministic testing
+                    services.Remove(services.Single(descriptor => descriptor.ServiceType == typeof(TimeProvider)));
+                    services.AddSingleton<TimeProvider>(FakeTimeProvider);
+                });
 
                 builder.ConfigureLogging(logging =>
                 {
@@ -74,6 +86,7 @@ public abstract class BaseSystemTest : IClassFixture<DatabaseFixture>
     protected readonly DatabaseFixture DatabaseFixture;
     protected WebApplicationFactory<Program> WebAppFactory => DatabaseFixture.WebAppFactory;
     protected HttpClient HttpClient { get; private set; }
+    protected FakeTimeProvider FakeTimeProvider => DatabaseFixture.FakeTimeProvider;
 
     protected BaseSystemTest(DatabaseFixture databaseFixture)
     {
