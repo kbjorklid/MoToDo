@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using Users.Application.Ports;
 using Users.Domain;
 using Users.Infrastructure.Configurations;
 
@@ -7,7 +8,7 @@ namespace Users.Infrastructure;
 /// <summary>
 /// Database context for the Users module, configured for PostgreSQL with the 'Users' schema.
 /// </summary>
-public sealed class UsersDbContext : DbContext
+public sealed class UsersDbContext : DbContext, IUsersQueryContext
 {
     public UsersDbContext(DbContextOptions<UsersDbContext> options) : base(options)
     {

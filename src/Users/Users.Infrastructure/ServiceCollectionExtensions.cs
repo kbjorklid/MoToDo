@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
+using Users.Application.Ports;
 using Users.Domain;
 
 namespace Users.Infrastructure;
@@ -25,6 +26,9 @@ public static class ServiceCollectionExtensions
 
         // Register repositories
         services.AddScoped<IUserRepository, UserRepository>();
+
+        // Register query context (for CQRS read operations)
+        services.AddScoped<IUsersQueryContext>(provider => provider.GetRequiredService<UsersDbContext>());
 
         return services;
     }
