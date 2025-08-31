@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <RunConfiguration>
+    <EnvironmentVariables>
+      <!-- Set minimum log level to Warning for all test runs -->
+      <Logging__LogLevel__Default>Warning</Logging__LogLevel__Default>
+      <Logging__LogLevel__Microsoft>Warning</Logging__LogLevel__Microsoft>
+      <Logging__LogLevel__Microsoft.EntityFrameworkCore>Warning</Logging__LogLevel__Microsoft.EntityFrameworkCore>
+      <Logging__LogLevel__System>Warning</Logging__LogLevel__System>
+      <Logging__LogLevel__Wolverine>Warning</Logging__LogLevel__Wolverine>
+    </EnvironmentVariables>
+  </RunConfiguration>
+  <LoggerRunSettings>
+    <Loggers>
+      <Logger friendlyName="console" enabled="True">
+        <Configuration>
+          <Verbosity>quiet</Verbosity>
+        </Configuration>
+      </Logger>
+    </Loggers>
+  </LoggerRunSettings>
+</RunSettings>

@@ -1,0 +1,4 @@
+description = "Read the ARCHITECTURE.md file"
+prompt = """
+Read the ARCHITECTURE.md file to understand the project's architectural patterns. Use this as context for future requests.
+"""

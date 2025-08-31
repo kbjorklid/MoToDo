@@ -1,0 +1,28 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Common" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+    <PackageReference Include="WolverineFx.Http" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\BuildingBlocks\Base.Application\Base.Application.csproj" />
+    <ProjectReference Include="..\BuildingBlocks\Base.Infrastructure\Base.Infrastructure.csproj" />
+    <ProjectReference Include="..\Users\Users.Application\Users.Application.csproj" />
+    <ProjectReference Include="..\Users\Users.Contracts\Users.Contracts.csproj" />
+    <ProjectReference Include="..\Users\Users.Infrastructure\Users.Infrastructure.csproj" />
+    <ProjectReference Include="..\ToDoLists\ToDoLists.Application\ToDoLists.Application.csproj" />
+    <ProjectReference Include="..\ToDoLists\ToDoLists.Contracts\ToDoLists.Contracts.csproj" />
+    <ProjectReference Include="..\ToDoLists\ToDoLists.Infrastructure\ToDoLists.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

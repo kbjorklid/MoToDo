@@ -1,0 +1,5 @@
+description = "Read the CODING_CONVENTIONS.md file"
+prompt = """
+Read the CODING_CONVENTIONS.md file to understand the project's coding conventions patterns. Use this as context for future requests.
+"""
+

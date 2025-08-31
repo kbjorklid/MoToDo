@@ -1,0 +1,4 @@
+description = "Read the TESTING_CONVENTIONS.md file"
+prompt = """
+Read the TESTING_CONVENTIONS.md file to understand the project's testing strategy, project organization, system vs unit test guidelines, and Test Object Builder patterns. Use this as context for future requests.
+"""

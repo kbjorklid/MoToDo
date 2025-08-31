@@ -1,0 +1,4 @@
+description = "Read the REST_CONVENTIONS.md file"
+prompt = """
+Read the REST_CONVENTIONS.md file to understand the project's API design standards, versioning, URI conventions, and JSON formatting. Use this as context for future requests.
+"""
