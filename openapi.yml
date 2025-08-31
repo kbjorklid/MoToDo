@@ -1,0 +1,579 @@
+openapi: 3.0.3
+info:
+  title: MoToDo API
+  description: Task management API for the MoToDo application
+  version: 1.0.0
+  contact:
+    name: MoToDo Development Team
+  license:
+    name: MIT
+
+servers:
+  - url: /api/v1
+    description: Version 1 API
+
+security:
+  - BearerAuth: []
+
+paths:
+  /todo-lists:
+    get:
+      tags:
+        - ToDoLists
+      summary: Get user's todo lists
+      description: Retrieve all todo lists owned by the authenticated user
+      parameters:
+        - name: sort
+          in: query
+          description: Sort criteria (createdAt, title, -createdAt, -title)
+          schema:
+            type: string
+            example: "-createdAt"
+        - name: page
+          in: query
+          description: Page number for pagination
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+        - name: limit
+          in: query
+          description: Number of items per page
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 20
+      responses:
+        '200':
+          description: Todo lists retrieved successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/ToDoListSummary'
+                  pagination:
+                    $ref: '#/components/schemas/PaginationInfo'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    post:
+      tags:
+        - ToDoLists
+      summary: Create a new todo list
+      description: Create a new todo list for the authenticated user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                  description: The title of the todo list
+                  example: "My Shopping List"
+      responses:
+        '201':
+          description: Todo list created successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToDoListDetail'
+        '400':
+          $ref: '#/components/responses/ValidationProblem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /todo-lists/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        description: The unique identifier of the todo list
+        schema:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    get:
+      tags:
+        - ToDoLists
+      summary: Get a specific todo list
+      description: Retrieve a specific todo list with all its todos
+      responses:
+        '200':
+          description: Todo list retrieved successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToDoListDetail'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    put:
+      tags:
+        - ToDoLists
+      summary: Update todo list title
+      description: Update the title of an existing todo list
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                  description: The new title for the todo list
+                  example: "Updated Shopping List"
+      responses:
+        '200':
+          description: Todo list updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToDoListDetail'
+        '400':
+          $ref: '#/components/responses/ValidationProblem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - ToDoLists
+      summary: Delete a todo list
+      description: Delete an existing todo list and all its todos
+      responses:
+        '204':
+          description: Todo list deleted successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /todo-lists/{listId}/todos:
+    parameters:
+      - name: listId
+        in: path
+        required: true
+        description: The unique identifier of the todo list
+        schema:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+
+    post:
+      tags:
+        - ToDos
+      summary: Add a todo to a list
+      description: Add a new todo item to an existing todo list
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required:
+                - title
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                  description: The title of the todo item
+                  example: "Buy milk"
+      responses:
+        '201':
+          description: Todo added successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToDo'
+        '400':
+          $ref: '#/components/responses/ValidationProblem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+  /todo-lists/{listId}/todos/{todoId}:
+    parameters:
+      - name: listId
+        in: path
+        required: true
+        description: The unique identifier of the todo list
+        schema:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+      - name: todoId
+        in: path
+        required: true
+        description: The unique identifier of the todo item
+        schema:
+          type: string
+          format: uuid
+          example: "660f9500-f3ac-42e5-b827-556755551111"
+
+    put:
+      tags:
+        - ToDos
+      summary: Update a todo item
+      description: Update the title and/or completion status of a todo item
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              minProperties: 1
+              properties:
+                title:
+                  type: string
+                  minLength: 1
+                  maxLength: 200
+                  description: The new title for the todo item
+                  example: "Buy organic milk"
+                isCompleted:
+                  type: boolean
+                  description: The completion status of the todo item
+                  example: true
+      responses:
+        '200':
+          description: Todo updated successfully
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ToDo'
+        '400':
+          $ref: '#/components/responses/ValidationProblem'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+    delete:
+      tags:
+        - ToDos
+      summary: Remove a todo from a list
+      description: Remove an existing todo item from a todo list
+      responses:
+        '204':
+          description: Todo removed successfully
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalServerError'
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authentication
+
+  schemas:
+    ToDoListSummary:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the todo list
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        title:
+          type: string
+          description: The title of the todo list
+          example: "My Shopping List"
+        todoCount:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Number of todos in the list
+          example: 5
+        createdAt:
+          type: string
+          format: date-time
+          description: When the todo list was created
+          example: "2024-01-15T10:30:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the todo list was last updated
+          example: "2024-01-15T14:20:00.000Z"
+      required:
+        - id
+        - title
+        - todoCount
+        - createdAt
+
+    ToDoListDetail:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the todo list
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        title:
+          type: string
+          description: The title of the todo list
+          example: "My Shopping List"
+        todos:
+          type: array
+          items:
+            $ref: '#/components/schemas/ToDo'
+          maxItems: 100
+          description: Array of todos in the list
+        todoCount:
+          type: integer
+          minimum: 0
+          maximum: 100
+          description: Number of todos in the list
+          example: 5
+        createdAt:
+          type: string
+          format: date-time
+          description: When the todo list was created
+          example: "2024-01-15T10:30:00.000Z"
+        updatedAt:
+          type: string
+          format: date-time
+          description: When the todo list was last updated
+          example: "2024-01-15T14:20:00.000Z"
+      required:
+        - id
+        - title
+        - todos
+        - todoCount
+        - createdAt
+
+    ToDo:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          description: Unique identifier for the todo item
+          example: "660f9500-f3ac-42e5-b827-556755551111"
+        title:
+          type: string
+          description: The title of the todo item
+          example: "Buy milk"
+        isCompleted:
+          type: boolean
+          description: Whether the todo item is completed
+          example: false
+        createdAt:
+          type: string
+          format: date-time
+          description: When the todo item was created
+          example: "2024-01-15T10:35:00.000Z"
+        completedAt:
+          type: string
+          format: date-time
+          description: When the todo item was completed (only present when isCompleted is true)
+          example: "2024-01-15T16:45:00.000Z"
+      required:
+        - id
+        - title
+        - isCompleted
+        - createdAt
+
+    PaginationInfo:
+      type: object
+      properties:
+        totalItems:
+          type: integer
+          minimum: 0
+          description: Total number of items available
+          example: 45
+        totalPages:
+          type: integer
+          minimum: 0
+          description: Total number of pages
+          example: 3
+        currentPage:
+          type: integer
+          minimum: 1
+          description: Current page number
+          example: 1
+        limit:
+          type: integer
+          minimum: 1
+          description: Number of items per page
+          example: 20
+      required:
+        - totalItems
+        - totalPages
+        - currentPage
+        - limit
+
+    ProblemDetails:
+      type: object
+      properties:
+        type:
+          type: string
+          description: A URI reference that identifies the problem type
+          example: "https://tools.ietf.org/html/rfc7231#section-6.5.1"
+        title:
+          type: string
+          description: A short, human-readable summary of the problem type
+          example: "Resource not found"
+        status:
+          type: integer
+          description: The HTTP status code
+          example: 404
+        detail:
+          type: string
+          description: A human-readable explanation specific to this occurrence
+          example: "The requested todo list was not found"
+        instance:
+          type: string
+          description: A URI reference that identifies the specific occurrence
+          example: "/api/v1/todo-lists/123"
+      required:
+        - title
+        - status
+
+    ValidationProblemDetails:
+      allOf:
+        - $ref: '#/components/schemas/ProblemDetails'
+        - type: object
+          properties:
+            errors:
+              type: object
+              additionalProperties:
+                type: array
+                items:
+                  type: string
+              description: Validation errors organized by field name
+              example:
+                title:
+                  - "Title cannot be empty"
+                  - "Title must be less than 200 characters"
+
+  responses:
+    ValidationProblem:
+      description: Invalid request data
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ValidationProblemDetails'
+          example:
+            type: "https://tools.ietf.org/html/rfc7231#section-6.5.1"
+            title: "One or more validation errors occurred."
+            status: 400
+            errors:
+              title:
+                - "Title cannot be empty"
+              "": 
+                - "Todo list cannot contain more than 100 items"
+
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: "https://tools.ietf.org/html/rfc7231#section-6.5.1"
+            title: "Unauthorized"
+            status: 401
+            detail: "Authentication token is required"
+
+    Forbidden:
+      description: Access denied to the requested resource
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: "https://tools.ietf.org/html/rfc7231#section-6.5.3"
+            title: "Forbidden"
+            status: 403
+            detail: "Access denied to this todo list"
+
+    NotFound:
+      description: Requested resource not found
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          examples:
+            ToDoListNotFound:
+              value:
+                type: "https://tools.ietf.org/html/rfc7231#section-6.5.4"
+                title: "Resource not found"
+                status: 404
+                detail: "Todo list not found"
+            ToDoNotFound:
+              value:
+                type: "https://tools.ietf.org/html/rfc7231#section-6.5.4"
+                title: "Resource not found"
+                status: 404
+                detail: "Todo item not found"
+
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ProblemDetails'
+          example:
+            type: "https://tools.ietf.org/html/rfc7231#section-6.6.1"
+            title: "An error occurred while processing the request"
+            status: 500
+            detail: "An unexpected error occurred"
+
+tags:
+  - name: ToDoLists
+    description: Operations for managing todo lists
+  - name: ToDos
+    description: Operations for managing todo items within lists

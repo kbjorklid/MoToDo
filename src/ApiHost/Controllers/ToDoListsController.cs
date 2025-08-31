@@ -35,7 +35,7 @@ public class ToDoListsController : ControllerBase
         {
             return CreatedAtAction(
                 nameof(GetToDoList),
-                new { toDoListId = result.Value.ToDoListId },
+                new { id = result.Value.ToDoListId },
                 result.Value);
         }
 
@@ -45,12 +45,12 @@ public class ToDoListsController : ControllerBase
     /// <summary>
     /// Retrieves a todo list by its unique identifier.
     /// </summary>
-    [HttpGet("{toDoListId}")]
+    [HttpGet("{id}")]
     [ProducesResponseType(typeof(object), StatusCodes.Status200OK)] // TODO: Create proper DTO for get operation
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public Task<IActionResult> GetToDoList(string toDoListId)
+    public Task<IActionResult> GetToDoList(string id)
     {
         // TODO: Implement GetToDoListQuery and handler
         return Task.FromResult<IActionResult>(Ok(new { message = "GetToDoList endpoint not yet implemented" }));
