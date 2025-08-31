@@ -6,6 +6,12 @@ using Wolverine;
 namespace ApiHost.Controllers;
 
 /// <summary>
+/// Request model for adding a new todo item to a list.
+/// </summary>
+/// <param name="Title">The title of the new todo item.</param>
+public sealed record AddToDoRequest(string Title);
+
+/// <summary>
 /// REST API controller for todo list management operations.
 /// </summary>
 [ApiController]
@@ -54,6 +60,30 @@ public class ToDoListsController : ControllerBase
     {
         // TODO: Implement GetToDoListQuery and handler
         return Task.FromResult<IActionResult>(Ok(new { message = "GetToDoList endpoint not yet implemented" }));
+    }
+
+    /// <summary>
+    /// Adds a new todo item to an existing todo list.
+    /// </summary>
+    [HttpPost("{listId}/todos")]
+    [ProducesResponseType(typeof(AddToDoResult), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> AddToDoToList(string listId, [FromBody] AddToDoRequest request)
+    {
+        var command = new AddToDoCommand(listId, request.Title);
+        Result<AddToDoResult> result = await _messageBus.InvokeAsync<Result<AddToDoResult>>(command);
+
+        if (result.IsSuccess)
+        {
+            return CreatedAtAction(
+                nameof(GetToDoList),
+                new { id = listId },
+                result.Value);
+        }
+
+        return HandleError(result.Error);
     }
 
     private IActionResult HandleError(Error error)
