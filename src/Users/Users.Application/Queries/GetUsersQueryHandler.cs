@@ -1,5 +1,7 @@
 using Base.Domain;
 using Base.Domain.Result;
+using Microsoft.EntityFrameworkCore;
+using Users.Application.Ports;
 using Users.Contracts;
 using Users.Domain;
 
@@ -11,12 +13,12 @@ namespace Users.Application.Queries;
 public static class GetUsersQueryHandler
 {
     /// <summary>
-    /// Handles the query to retrieve users using Wolverine's preferred static method pattern.
+    /// Handles the query to retrieve users using Wolverine's preferred static method pattern with CQRS principles - direct database querying via query context.
     /// </summary>
     /// <param name="query">The get users query containing pagination and sorting parameters.</param>
-    /// <param name="userRepository">The user repository injected by Wolverine.</param>
+    /// <param name="queryContext">The query context for direct database access.</param>
     /// <returns>A Result containing the GetUsersResult if successful, or an error if validation fails.</returns>
-    public static async Task<Result<GetUsersResult>> Handle(GetUsersQuery query, IUserRepository userRepository)
+    public static async Task<Result<GetUsersResult>> Handle(GetUsersQuery query, IUsersQueryContext queryContext)
     {
         Result<PagingParameters> pagingParametersResult = PagingParameters.Create(
             query.Page ?? PagingParameters.DefaultPage,
@@ -39,50 +41,61 @@ public static class GetUsersQueryHandler
 
         (UsersSortBy sortBy, bool ascending) = sortResult.Value;
 
-        // Build query criteria
-        UserQueryCriteria.UserQueryCriteriaBuilder criteriaBuilder = UserQueryCriteria.Builder(pagingParameters)
-            .WithSortBy(sortBy, ascending);
+        // Execute query directly with LINQ
+        IQueryable<User> queryable = queryContext.Users.AsNoTracking();
 
-        // Apply filtering if provided
+        // Apply filtering using implicit string conversion
         if (!string.IsNullOrWhiteSpace(query.Email))
         {
-            criteriaBuilder = criteriaBuilder.WithEmailFilter(query.Email);
+            queryable = queryable.Where(u => ((string)u.Email).Contains(query.Email));
         }
 
         if (!string.IsNullOrWhiteSpace(query.UserName))
         {
-            criteriaBuilder = criteriaBuilder.WithUserNameFilter(query.UserName);
+            queryable = queryable.Where(u => ((string)u.UserName).Contains(query.UserName));
         }
 
-        Result<UserQueryCriteria> criteriaResult = criteriaBuilder.Build();
-
-        if (criteriaResult.IsFailure)
+        // Apply sorting
+        queryable = sortBy switch
         {
-            return criteriaResult.Error;
-        }
+            UsersSortBy.UserName => ascending
+                ? queryable.OrderBy(u => u.UserName)
+                : queryable.OrderByDescending(u => u.UserName),
+            UsersSortBy.Email => ascending
+                ? queryable.OrderBy(u => u.Email)
+                : queryable.OrderByDescending(u => u.Email),
+            UsersSortBy.LastLoginAt => ascending
+                ? queryable.OrderBy(u => u.LastLoginAt)
+                : queryable.OrderByDescending(u => u.LastLoginAt),
+            _ => ascending
+                ? queryable.OrderBy(u => u.CreatedAt)
+                : queryable.OrderByDescending(u => u.CreatedAt)
+        };
 
-        UserQueryCriteria criteria = criteriaResult.Value;
+        // Get total count before pagination
+        int totalItems = await queryable.CountAsync();
+        int totalPages = (int)Math.Ceiling((double)totalItems / pagingParameters.Limit);
 
-        // Execute query
-        PagedResult<User> pagedUsers = await userRepository.FindUsersAsync(criteria);
-
-        // Map to DTOs
-        System.Collections.ObjectModel.ReadOnlyCollection<UserDto> userDtos = pagedUsers.Data
-            .Select(user => new UserDto(
-                user.Id.Value,
-                user.Email.Value.Address,
-                user.UserName.Value,
-                user.CreatedAt,
-                user.LastLoginAt
+        // Apply pagination and project to DTOs
+        List<UserDto> userDtoList = await queryable
+            .Skip((pagingParameters.Page - 1) * pagingParameters.Limit)
+            .Take(pagingParameters.Limit)
+            .Select(u => new UserDto(
+                u.Id.Value,
+                u.Email.Value.Address,
+                u.UserName.Value,
+                u.CreatedAt,
+                u.LastLoginAt
             ))
-            .ToList()
-            .AsReadOnly();
+            .ToListAsync();
+
+        System.Collections.ObjectModel.ReadOnlyCollection<UserDto> userDtos = userDtoList.AsReadOnly();
 
         var paginationInfo = new PaginationInfo(
-            pagedUsers.TotalItems,
-            pagedUsers.TotalPages,
-            pagedUsers.CurrentPage,
-            pagedUsers.Limit
+            totalItems,
+            totalPages,
+            pagingParameters.Page,
+            pagingParameters.Limit
         );
 
         return new GetUsersResult(userDtos, paginationInfo);
