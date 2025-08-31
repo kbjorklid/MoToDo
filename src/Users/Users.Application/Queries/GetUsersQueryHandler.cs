@@ -26,96 +26,34 @@ public static class GetUsersQueryHandler
         );
 
         if (pagingParametersResult.IsFailure)
-        {
             return pagingParametersResult.Error;
-        }
 
         PagingParameters pagingParameters = pagingParametersResult.Value;
 
-        // Parse sorting parameters
-        Result<(UsersSortBy sortBy, bool ascending)> sortResult = ParseSortParameter(query.Sort);
-        if (sortResult.IsFailure)
-        {
-            return sortResult.Error;
-        }
-
-        (UsersSortBy sortBy, bool ascending) = sortResult.Value;
-
-        // Execute query directly with LINQ
         IQueryable<User> queryable = queryContext.Users.AsNoTracking();
+        queryable = ApplyFiltering(queryable, query);
+        queryable = ApplySorting(queryable, query.Sort);
 
-        // Apply filtering using implicit string conversion
-        if (!string.IsNullOrWhiteSpace(query.Email))
-        {
-            queryable = queryable.Where(u => ((string)u.Email).Contains(query.Email));
-        }
-
-        if (!string.IsNullOrWhiteSpace(query.UserName))
-        {
-            queryable = queryable.Where(u => ((string)u.UserName).Contains(query.UserName));
-        }
-
-        // Apply sorting
-        queryable = sortBy switch
-        {
-            UsersSortBy.UserName => ascending
-                ? queryable.OrderBy(u => u.UserName)
-                : queryable.OrderByDescending(u => u.UserName),
-            UsersSortBy.Email => ascending
-                ? queryable.OrderBy(u => u.Email)
-                : queryable.OrderByDescending(u => u.Email),
-            UsersSortBy.LastLoginAt => ascending
-                ? queryable.OrderBy(u => u.LastLoginAt)
-                : queryable.OrderByDescending(u => u.LastLoginAt),
-            _ => ascending
-                ? queryable.OrderBy(u => u.CreatedAt)
-                : queryable.OrderByDescending(u => u.CreatedAt)
-        };
-
-        // Get total count before pagination
         int totalItems = await queryable.CountAsync();
         int totalPages = (int)Math.Ceiling((double)totalItems / pagingParameters.Limit);
 
-        // Apply pagination and project to DTOs
-        List<UserDto> userDtoList = await queryable
+        List<UserDto> userDtos = await queryable
             .Skip((pagingParameters.Page - 1) * pagingParameters.Limit)
             .Take(pagingParameters.Limit)
-            .Select(u => new UserDto(
-                u.Id.Value,
-                u.Email.Value.Address,
-                u.UserName.Value,
-                u.CreatedAt,
-                u.LastLoginAt
-            ))
+            .Select(MapToUserDto)
             .ToListAsync();
 
-        System.Collections.ObjectModel.ReadOnlyCollection<UserDto> userDtos = userDtoList.AsReadOnly();
-
-        var paginationInfo = new PaginationInfo(
-            totalItems,
-            totalPages,
-            pagingParameters.Page,
-            pagingParameters.Limit
-        );
-
-        return new GetUsersResult(userDtos, paginationInfo);
+        var paginationInfo = new PaginationInfo(totalItems, totalPages, pagingParameters.Page, pagingParameters.Limit);
+        return new GetUsersResult(userDtos.AsReadOnly(), paginationInfo);
     }
 
-    private static Result<(UsersSortBy sortBy, bool ascending)> ParseSortParameter(string? sort)
+    private static (UsersSortBy sortBy, bool ascending) ParseSortParameter(string? sort)
     {
         if (string.IsNullOrWhiteSpace(sort))
-        {
             return (UsersSortBy.CreatedAt, true);
-        }
 
-        bool ascending = true;
-        string fieldName = sort;
-
-        if (sort.StartsWith('-'))
-        {
-            ascending = false;
-            fieldName = sort[1..];
-        }
+        bool ascending = !sort.StartsWith('-');
+        string fieldName = ascending ? sort : sort[1..];
 
         UsersSortBy sortBy = fieldName.ToLowerInvariant() switch
         {
@@ -128,4 +66,31 @@ public static class GetUsersQueryHandler
 
         return (sortBy, ascending);
     }
+
+    private static IQueryable<User> ApplyFiltering(IQueryable<User> queryable, GetUsersQuery query)
+    {
+        if (!string.IsNullOrWhiteSpace(query.Email))
+            queryable = queryable.Where(u => ((string)u.Email).Contains(query.Email));
+
+        if (!string.IsNullOrWhiteSpace(query.UserName))
+            queryable = queryable.Where(u => ((string)u.UserName).Contains(query.UserName));
+
+        return queryable;
+    }
+
+    private static IQueryable<User> ApplySorting(IQueryable<User> queryable, string? sort)
+    {
+        (UsersSortBy sortBy, bool ascending) = ParseSortParameter(sort);
+
+        return sortBy switch
+        {
+            UsersSortBy.UserName => ascending ? queryable.OrderBy(u => u.UserName) : queryable.OrderByDescending(u => u.UserName),
+            UsersSortBy.Email => ascending ? queryable.OrderBy(u => u.Email) : queryable.OrderByDescending(u => u.Email),
+            UsersSortBy.LastLoginAt => ascending ? queryable.OrderBy(u => u.LastLoginAt) : queryable.OrderByDescending(u => u.LastLoginAt),
+            _ => ascending ? queryable.OrderBy(u => u.CreatedAt) : queryable.OrderByDescending(u => u.CreatedAt)
+        };
+    }
+
+    private static System.Linq.Expressions.Expression<Func<User, UserDto>> MapToUserDto =>
+        u => new UserDto(u.Id.Value, u.Email.Value.Address, u.UserName.Value, u.CreatedAt, u.LastLoginAt);
 }
