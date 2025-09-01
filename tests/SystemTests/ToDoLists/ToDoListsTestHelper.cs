@@ -85,6 +85,36 @@ public static class ToDoListsTestHelper
     }
 
     /// <summary>
+    /// Adds a todo item to an existing todo list via the API and returns the created result.
+    /// </summary>
+    public static async Task<AddToDoResult> AddToDoAsync(HttpClient httpClient, Guid toDoListId, string title)
+    {
+        object request = new AddToDoRequestBuilder()
+            .WithTitle(title)
+            .Build();
+        HttpResponseMessage response = await httpClient.PostAsync($"/api/v1/todo-lists/{toDoListId}/todos", ToJsonContent(request));
+
+        if (response.StatusCode != HttpStatusCode.Created)
+            throw new InvalidOperationException($"Failed to add todo. Status: {response.StatusCode}");
+
+        return await FromJsonAsync<AddToDoResult>(response);
+    }
+
+    /// <summary>
+    /// Adds a todo item to an existing todo list with default title via the API and returns the created result.
+    /// </summary>
+    public static async Task<AddToDoResult> AddToDoAsync(HttpClient httpClient, Guid toDoListId)
+    {
+        object request = new AddToDoRequestBuilder().Build();
+        HttpResponseMessage response = await httpClient.PostAsync($"/api/v1/todo-lists/{toDoListId}/todos", ToJsonContent(request));
+
+        if (response.StatusCode != HttpStatusCode.Created)
+            throw new InvalidOperationException($"Failed to add todo. Status: {response.StatusCode}");
+
+        return await FromJsonAsync<AddToDoResult>(response);
+    }
+
+    /// <summary>
     /// Deserializes JSON response to the specified type with camelCase naming policy.
     /// </summary>
     private static async Task<T> FromJsonAsync<T>(HttpResponseMessage response)

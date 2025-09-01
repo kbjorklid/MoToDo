@@ -149,4 +149,65 @@ public sealed class ToDoList : AggregateRoot<ToDoListId>
 
         return Result.Success();
     }
+
+    /// <summary>
+    /// Updates a ToDo item in this list (title and/or completion status).
+    /// </summary>
+    /// <param name="todoId">The unique identifier of the todo item to update.</param>
+    /// <param name="newTitle">The new title for the todo item (optional).</param>
+    /// <param name="isCompleted">The new completion status (optional).</param>
+    /// <param name="updatedAt">The date and time when the todo item was updated.</param>
+    /// <returns>A Result indicating success or failure.</returns>
+    public Result UpdateToDo(ToDoId todoId, string? newTitle, bool? isCompleted, DateTime updatedAt)
+    {
+        ToDo? toDo = _todos.FirstOrDefault(t => t.Id == todoId);
+        if (toDo == null)
+            return new Error(Codes.ToDoNotFound, "The specified todo item was not found in this list.", ErrorType.NotFound);
+
+        bool hasChanges = false;
+
+        // Update title if provided
+        if (newTitle != null)
+        {
+            Result<Title> titleResult = Title.Create(newTitle);
+            if (titleResult.IsFailure)
+                return titleResult.Error;
+
+            // Check for duplicate titles (excluding current todo)
+            if (_todos.Any(t => t.Id != todoId &&
+                                string.Equals(t.Title.Value, titleResult.Value.Value, StringComparison.OrdinalIgnoreCase)))
+            {
+                return new Error(Codes.DuplicateTitle, "A todo with this title already exists in the list.", ErrorType.Validation);
+            }
+
+            Result updateTitleResult = toDo.UpdateTitle(titleResult.Value);
+            if (updateTitleResult.IsFailure)
+                return updateTitleResult.Error;
+
+            hasChanges = true;
+        }
+
+        // Update completion status if provided
+        if (isCompleted.HasValue)
+        {
+            if (isCompleted.Value && !toDo.IsCompleted)
+            {
+                toDo.MarkAsCompleted(updatedAt);
+                AddDomainEvent(new ToDoCompletedEvent(Id, UserId, todoId, updatedAt));
+                hasChanges = true;
+            }
+            else if (!isCompleted.Value && toDo.IsCompleted)
+            {
+                toDo.MarkAsIncomplete();
+                hasChanges = true;
+            }
+        }
+
+        if (hasChanges)
+        {
+            UpdatedAt = updatedAt;
+        }
+
+        return Result.Success();
+    }
 }

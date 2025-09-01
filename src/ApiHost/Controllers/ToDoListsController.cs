@@ -12,6 +12,13 @@ namespace ApiHost.Controllers;
 public sealed record AddToDoRequest(string Title);
 
 /// <summary>
+/// Request model for updating a todo item.
+/// </summary>
+/// <param name="Title">The new title of the todo item (optional).</param>
+/// <param name="IsCompleted">The new completion status (optional).</param>
+public sealed record UpdateToDoRequest(string? Title, bool? IsCompleted);
+
+/// <summary>
 /// REST API controller for todo list management operations.
 /// </summary>
 [ApiController]
@@ -113,6 +120,32 @@ public class ToDoListsController : ControllerBase
                 nameof(GetToDoList),
                 new { id = listId },
                 result.Value);
+        }
+
+        return HandleError(result.Error);
+    }
+
+    /// <summary>
+    /// Updates an existing todo item in a specific todo list.
+    /// </summary>
+    [HttpPut("{listId}/todos/{todoId}")]
+    [ProducesResponseType(typeof(UpdateToDoResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> UpdateToDo(
+        string listId,
+        string todoId,
+        [FromQuery] string userId,
+        [FromBody] UpdateToDoRequest request)
+    {
+        var command = new UpdateToDoCommand(listId, todoId, userId, request.Title, request.IsCompleted);
+        Result<UpdateToDoResult> result = await _messageBus.InvokeAsync<Result<UpdateToDoResult>>(command);
+
+        if (result.IsSuccess)
+        {
+            return Ok(result.Value);
         }
 
         return HandleError(result.Error);
