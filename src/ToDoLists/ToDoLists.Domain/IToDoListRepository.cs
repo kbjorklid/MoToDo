@@ -1,3 +1,5 @@
+using Base.Domain;
+
 namespace ToDoLists.Domain;
 
 /// <summary>
@@ -20,6 +22,14 @@ public interface IToDoListRepository
     /// <param name="cancellationToken">Cancellation token.</param>
     /// <returns>A read-only list of ToDoLists owned by the user.</returns>
     Task<IReadOnlyList<ToDoList>> GetByUserIdAsync(UserId userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Searches for ToDoLists based on the specified criteria with pagination and sorting.
+    /// </summary>
+    /// <param name="criteria">The search criteria including filters, sorting, and pagination parameters.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>A paged result containing the matching ToDoLists.</returns>
+    Task<PagedResult<ToDoList>> FindToDoListsAsync(ToDoListQueryCriteria criteria, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Adds a new ToDoList to the repository.

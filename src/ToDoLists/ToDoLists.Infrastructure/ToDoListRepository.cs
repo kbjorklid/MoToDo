@@ -1,3 +1,4 @@
+using Base.Domain;
 using Microsoft.EntityFrameworkCore;
 using ToDoLists.Domain;
 
@@ -31,6 +32,34 @@ internal sealed class ToDoListRepository : IToDoListRepository
             .ToListAsync(cancellationToken);
 
         return lists.AsReadOnly();
+    }
+
+    public async Task<PagedResult<ToDoList>> FindToDoListsAsync(ToDoListQueryCriteria criteria, CancellationToken cancellationToken = default)
+    {
+        IQueryable<ToDoList> query = _context.ToDoLists
+            .Include(tl => tl.Todos)
+            .Where(tl => tl.UserId == criteria.UserId);
+
+        // Apply sorting
+        query = criteria.SortBy switch
+        {
+            ToDoListsSortBy.CreatedAt => criteria.Ascending
+                ? query.OrderBy(tl => tl.CreatedAt)
+                : query.OrderByDescending(tl => tl.CreatedAt),
+            ToDoListsSortBy.Title => criteria.Ascending
+                ? query.OrderBy(tl => tl.Title)
+                : query.OrderByDescending(tl => tl.Title),
+            _ => query.OrderByDescending(tl => tl.CreatedAt)
+        };
+
+        int totalCount = await query.CountAsync(cancellationToken);
+
+        List<ToDoList> items = await query
+            .Skip(criteria.PagingParameters.Skip)
+            .Take(criteria.PagingParameters.Limit)
+            .ToListAsync(cancellationToken);
+
+        return PagedResult<ToDoList>.Create(items, totalCount, criteria.PagingParameters);
     }
 
     public async Task AddAsync(ToDoList toDoList, CancellationToken cancellationToken = default)

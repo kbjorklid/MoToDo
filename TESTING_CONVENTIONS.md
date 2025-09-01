@@ -410,6 +410,27 @@ var userId = new UserId(guid);
 UserId userId = UserIdBuilder.Create().WithValue(guid).Build();
 ```
 
+### 📝 Discard Pattern for Unused Return Values
+
+When calling methods that return values you don't need in tests, use the discard pattern (`_`) instead of creating unused variables:
+
+```csharp
+// ✅ Use discard pattern for unused return values
+_ = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+
+// ❌ Don't create unused variables
+CreateToDoListResult unusedResult = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+```
+
+**When to use discards**:
+- Setting up test data where you only need the side effects (data creation)
+- Calling methods for their side effects but not using the return value
+- Any scenario where you must call a method but the return value is irrelevant to the test
+
+**When NOT to use discards**:
+- When you need the return value for assertions or further test logic
+- In the 'Act' section when testing the method that returns the value you're interested in
+
 **Don't use builders for simple constructor calls**:
 ```csharp
 // ✅ Direct constructor when available

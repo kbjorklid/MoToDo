@@ -42,6 +42,39 @@ public static class ToDoListsTestHelper
     }
 
     /// <summary>
+    /// Creates a todo list for a specific user via the API and returns the created result.
+    /// </summary>
+    public static async Task<CreateToDoListResult> CreateToDoListAsync(HttpClient httpClient, Guid userId, string title)
+    {
+        CreateToDoListCommand command = new CreateToDoListCommandBuilder()
+            .WithUserId(userId.ToString())
+            .WithTitle(title)
+            .Build();
+        HttpResponseMessage response = await httpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(command));
+
+        if (response.StatusCode != HttpStatusCode.Created)
+            throw new InvalidOperationException($"Failed to create todo list. Status: {response.StatusCode}");
+
+        return await FromJsonAsync<CreateToDoListResult>(response);
+    }
+
+    /// <summary>
+    /// Creates a todo list for a specific user with default title via the API and returns the created result.
+    /// </summary>
+    public static async Task<CreateToDoListResult> CreateToDoListAsync(HttpClient httpClient, Guid userId)
+    {
+        CreateToDoListCommand command = new CreateToDoListCommandBuilder()
+            .WithUserId(userId.ToString())
+            .Build();
+        HttpResponseMessage response = await httpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(command));
+
+        if (response.StatusCode != HttpStatusCode.Created)
+            throw new InvalidOperationException($"Failed to create todo list. Status: {response.StatusCode}");
+
+        return await FromJsonAsync<CreateToDoListResult>(response);
+    }
+
+    /// <summary>
     /// Serializes an object to JSON with camelCase naming policy to match API conventions.
     /// </summary>
     private static StringContent ToJsonContent(object obj)

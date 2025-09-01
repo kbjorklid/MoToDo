@@ -27,6 +27,30 @@ public class ToDoListsController : ControllerBase
     }
 
     /// <summary>
+    /// Gets user's todo lists with optional pagination and sorting.
+    /// </summary>
+    [HttpGet]
+    [ProducesResponseType(typeof(GetToDoListsResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> GetToDoLists(
+        [FromQuery] string userId,
+        [FromQuery] string? sort = null,
+        [FromQuery] int? page = null,
+        [FromQuery] int? limit = null)
+    {
+        var query = new GetToDoListsQuery(userId, page, limit, sort);
+        Result<GetToDoListsResult> result = await _messageBus.InvokeAsync<Result<GetToDoListsResult>>(query);
+
+        if (result.IsSuccess)
+        {
+            return Ok(result.Value);
+        }
+
+        return HandleError(result.Error);
+    }
+
+    /// <summary>
     /// Creates a new todo list in the system.
     /// </summary>
     [HttpPost]
