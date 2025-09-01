@@ -28,7 +28,43 @@ public static class UpdateToDoCommandHandler
         TimeProvider timeProvider,
         CancellationToken cancellationToken)
     {
-        // Validate and convert IDs
+        Result<(ToDoListId toDoListId, ToDoId toDoId, UserId userId)> validationResult = ValidateIds(command);
+        if (validationResult.IsFailure)
+            return validationResult.Error;
+
+        (ToDoListId toDoListId, ToDoId toDoId, UserId userId) = validationResult.Value;
+
+        ToDoList? toDoList = await toDoListRepository.GetByIdAsync(toDoListId, cancellationToken);
+        if (toDoList == null)
+            return new Error(ToDoList.Codes.NotFound, "The specified todo list was not found.", ErrorType.NotFound);
+
+        Result authorizationResult = CheckAuthorization(toDoList, userId);
+        if (authorizationResult.IsFailure)
+            return authorizationResult.Error;
+
+        DateTime now = timeProvider.GetUtcNow().UtcDateTime;
+        Result updateResult = toDoList.UpdateToDo(toDoId, command.Title, command.IsCompleted, now);
+        if (updateResult.IsFailure)
+            return updateResult.Error;
+
+        ToDo? updatedToDo = toDoList.Todos.FirstOrDefault(t => t.Id == toDoId);
+        if (updatedToDo == null)
+            return new Error(ToDoList.Codes.ToDoNotFound, "The specified todo item was not found in this list.", ErrorType.NotFound);
+
+        await toDoListRepository.UpdateAsync(toDoList, cancellationToken);
+        await toDoListRepository.SaveChangesAsync(cancellationToken);
+
+        return new UpdateToDoResult(
+            updatedToDo.Id.Value,
+            updatedToDo.Title.Value,
+            updatedToDo.IsCompleted,
+            updatedToDo.CreatedAt,
+            updatedToDo.CompletedAt
+        );
+    }
+
+    private static Result<(ToDoListId toDoListId, ToDoId toDoId, UserId userId)> ValidateIds(UpdateToDoCommand command)
+    {
         Result<ToDoListId> toDoListIdResult = ToDoListId.FromString(command.ToDoListId);
         if (toDoListIdResult.IsFailure)
             return toDoListIdResult.Error;
@@ -41,37 +77,14 @@ public static class UpdateToDoCommandHandler
         if (userIdResult.IsFailure)
             return userIdResult.Error;
 
-        // Load the existing todo list
-        ToDoList? toDoList = await toDoListRepository.GetByIdAsync(toDoListIdResult.Value, cancellationToken);
-        if (toDoList == null)
-            return new Error(ToDoList.Codes.NotFound, "The specified todo list was not found.", ErrorType.NotFound);
+        return (toDoListIdResult.Value, toDoIdResult.Value, userIdResult.Value);
+    }
 
-        // Check authorization - user must own the list
-        if (toDoList.UserId != userIdResult.Value)
+    private static Result CheckAuthorization(ToDoList toDoList, UserId userId)
+    {
+        if (toDoList.UserId != userId)
             return new Error(Codes.AccessDenied, "Access denied to this todo list.", ErrorType.Forbidden);
 
-        // Update the todo item
-        DateTime now = timeProvider.GetUtcNow().UtcDateTime;
-        Result updateResult = toDoList.UpdateToDo(toDoIdResult.Value, command.Title, command.IsCompleted, now);
-        if (updateResult.IsFailure)
-            return updateResult.Error;
-
-        // Get the updated todo for the response
-        ToDo? updatedToDo = toDoList.Todos.FirstOrDefault(t => t.Id == toDoIdResult.Value);
-        if (updatedToDo == null)
-            return new Error(ToDoList.Codes.ToDoNotFound, "The specified todo item was not found in this list.", ErrorType.NotFound);
-
-        // Save changes
-        await toDoListRepository.UpdateAsync(toDoList, cancellationToken);
-        await toDoListRepository.SaveChangesAsync(cancellationToken);
-
-        // Map to result
-        return new UpdateToDoResult(
-            updatedToDo.Id.Value,
-            updatedToDo.Title.Value,
-            updatedToDo.IsCompleted,
-            updatedToDo.CreatedAt,
-            updatedToDo.CompletedAt
-        );
+        return Result.Success();
     }
 }
