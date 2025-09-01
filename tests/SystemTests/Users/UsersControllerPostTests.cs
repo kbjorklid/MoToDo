@@ -41,12 +41,47 @@ public class UsersControllerPostTests : BaseSystemTest
         Assert.Contains(result.UserId.ToString(), response.Headers.Location.ToString());
     }
 
-    [Fact]
-    public async Task PostUsers_WithInvalidEmail_ReturnsBadRequest()
+    [Theory]
+    [InlineData("invalid-email")]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("\t\t")]
+    [InlineData("testexample.com")]
+    [InlineData("test@")]
+    [InlineData("@example.com")]
+    [InlineData("test@@example.com")]
+    [InlineData(".test@example.com")]
+    public async Task PostUsers_WithInvalidEmail_ReturnsBadRequest(string invalidEmail)
     {
         // Arrange
         AddUserCommand command = new AddUserCommandBuilder()
-            .WithEmail("invalid-email")
+            .WithEmail(invalidEmail)
+            .Build();
+
+        // Act
+        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
+
+        // Assert
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("\t\t")]
+    [InlineData("ab")]
+    [InlineData("a")]
+    [InlineData("user name")]
+    [InlineData("user@name!")]
+    [InlineData("_username")]
+    [InlineData("username_")]
+    [InlineData("-username")]
+    [InlineData("username-")]
+    public async Task PostUsers_WithInvalidUserName_ReturnsBadRequest(string invalidUserName)
+    {
+        // Arrange
+        AddUserCommand command = new AddUserCommandBuilder()
+            .WithUserName(invalidUserName)
             .Build();
 
         // Act
@@ -57,26 +92,13 @@ public class UsersControllerPostTests : BaseSystemTest
     }
 
     [Fact]
-    public async Task PostUsers_WithEmptyEmail_ReturnsBadRequest()
+    public async Task PostUsers_WithVeryLongUserName_ReturnsBadRequest()
     {
-        // Arrange
+        // Arrange - Create username with 51+ characters (exceeds 50 character limit)
+        string longUserName = new string('a', 51);
+
         AddUserCommand command = new AddUserCommandBuilder()
-            .WithEmail("")
-            .Build();
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostUsers_WithEmptyUserName_ReturnsBadRequest()
-    {
-        // Arrange
-        AddUserCommand command = new AddUserCommandBuilder()
-            .WithUserName("")
+            .WithUserName(longUserName)
             .Build();
 
         // Act
@@ -142,89 +164,23 @@ public class UsersControllerPostTests : BaseSystemTest
         Assert.Contains("A user with this username already exists.", responseContent);
     }
 
-    [Fact]
-    public async Task PostUsers_WithNullEmail_ReturnsBadRequest()
+    [Theory]
+    [InlineData("""{"email": null, "userName": "testuser"}""")]
+    [InlineData("""{"email": "test@example.com", "userName": null}""")]
+    [InlineData("""{"email": "test@example.com", "userName": "testuser" """)]
+    [InlineData("""["email", "userName"]""")]
+    [InlineData("""{"userName": "testuser"}""")]
+    [InlineData("""{"email": "test@example.com"}""")]
+    [InlineData("""{}""")]
+    [InlineData("""{email: "test@example.com", userName: "testuser"}""")]
+    [InlineData("""{"email": "test@example.com", "userName": "testuser",}""")]
+    public async Task PostUsers_WithInvalidJsonData_ReturnsBadRequest(string jsonData)
     {
         // Arrange
-        string requestBody = """{"email": null, "userName": "testuser"}""";
-        var content = new StringContent(requestBody, Encoding.UTF8, "application/json");
+        var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
 
         // Act
         HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", content);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostUsers_WithNullUserName_ReturnsBadRequest()
-    {
-        // Arrange
-        string requestBody = """{"email": "test@example.com", "userName": null}""";
-        var content = new StringContent(requestBody, Encoding.UTF8, "application/json");
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", content);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostUsers_WithWhitespaceOnlyEmail_ReturnsBadRequest()
-    {
-        // Arrange
-        AddUserCommand command = new AddUserCommandBuilder()
-            .WithEmail("   ")
-            .Build();
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostUsers_WithWhitespaceOnlyUserName_ReturnsBadRequest()
-    {
-        // Arrange
-        AddUserCommand command = new AddUserCommandBuilder()
-            .WithUserName("   ")
-            .Build();
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostUsers_WithTabOnlyEmail_ReturnsBadRequest()
-    {
-        // Arrange
-        AddUserCommand command = new AddUserCommandBuilder()
-            .WithEmail("\t\t")
-            .Build();
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostUsers_WithTabOnlyUserName_ReturnsBadRequest()
-    {
-        // Arrange
-        AddUserCommand command = new AddUserCommandBuilder()
-            .WithUserName("\t\t")
-            .Build();
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
@@ -249,92 +205,6 @@ public class UsersControllerPostTests : BaseSystemTest
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
-    [Fact]
-    public async Task PostUsers_WithVeryLongUserName_ReturnsBadRequest()
-    {
-        // Arrange - Create username with 51+ characters (exceeds 50 character limit)
-        string longUserName = new string('a', 51);
-
-        AddUserCommand command = new AddUserCommandBuilder()
-            .WithUserName(longUserName)
-            .Build();
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostUsers_WithMalformedJson_ReturnsBadRequest()
-    {
-        // Arrange - Missing closing brace
-        string malformedJson = """{"email": "test@example.com", "userName": "testuser" """;
-        var content = new StringContent(malformedJson, Encoding.UTF8, "application/json");
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", content);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostUsers_WithInvalidJsonStructure_ReturnsBadRequest()
-    {
-        // Arrange - Invalid JSON structure
-        string invalidJson = """["email", "userName"]""";
-        var content = new StringContent(invalidJson, Encoding.UTF8, "application/json");
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", content);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostUsers_WithMissingEmailProperty_ReturnsBadRequest()
-    {
-        // Arrange - Missing email property completely
-        string requestBody = """{"userName": "testuser"}""";
-        var content = new StringContent(requestBody, Encoding.UTF8, "application/json");
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", content);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostUsers_WithMissingUserNameProperty_ReturnsBadRequest()
-    {
-        // Arrange - Missing userName property completely
-        string requestBody = """{"email": "test@example.com"}""";
-        var content = new StringContent(requestBody, Encoding.UTF8, "application/json");
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", content);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostUsers_WithEmptyJsonObject_ReturnsBadRequest()
-    {
-        // Arrange - Completely empty JSON object
-        string requestBody = """{}""";
-        var content = new StringContent(requestBody, Encoding.UTF8, "application/json");
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", content);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
 
     [Fact]
     public async Task PostUsers_WithWrongContentType_ReturnsUnsupportedMediaType()
@@ -417,65 +287,9 @@ public class UsersControllerPostTests : BaseSystemTest
         Assert.Equal(HttpStatusCode.Created, secondResponse.StatusCode);
     }
 
-    [Fact]
-    public async Task PostUsers_WithEmailMissingAtSymbol_ReturnsBadRequest()
-    {
-        // Arrange
-        AddUserCommand command = new AddUserCommandBuilder()
-            .WithEmail("testexample.com")
-            .Build();
 
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
 
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
 
-    [Fact]
-    public async Task PostUsers_WithEmailMissingDomain_ReturnsBadRequest()
-    {
-        // Arrange
-        AddUserCommand command = new AddUserCommandBuilder()
-            .WithEmail("test@")
-            .Build();
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostUsers_WithEmailMissingLocalPart_ReturnsBadRequest()
-    {
-        // Arrange
-        AddUserCommand command = new AddUserCommandBuilder()
-            .WithEmail("@example.com")
-            .Build();
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostUsers_WithEmailMultipleAtSymbols_ReturnsBadRequest()
-    {
-        // Arrange
-        AddUserCommand command = new AddUserCommandBuilder()
-            .WithEmail("test@@example.com")
-            .Build();
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
 
     [Fact]
     public async Task PostUsers_WithEmailInvalidDomainFormat_ReturnsCreated()
@@ -493,35 +307,7 @@ public class UsersControllerPostTests : BaseSystemTest
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
-    [Fact]
-    public async Task PostUsers_WithUserNameContainingSpaces_ReturnsBadRequest()
-    {
-        // Arrange
-        AddUserCommand command = new AddUserCommandBuilder()
-            .WithUserName("user name")
-            .Build();
 
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostUsers_WithUserNameContainingSpecialCharacters_ReturnsBadRequest()
-    {
-        // Arrange
-        AddUserCommand command = new AddUserCommandBuilder()
-            .WithUserName("user@name!")
-            .Build();
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
 
     [Fact]
     public async Task PostUsers_WithUserNameStartingWithNumber_ReturnsCreated()
@@ -539,35 +325,7 @@ public class UsersControllerPostTests : BaseSystemTest
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
-    [Fact]
-    public async Task PostUsers_WithUserNameTooShort_ReturnsBadRequest()
-    {
-        // Arrange - Username must be at least 3 characters
-        AddUserCommand command = new AddUserCommandBuilder()
-            .WithUserName("ab")
-            .Build();
 
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostUsers_WithEmailStartingWithDot_ReturnsBadRequest()
-    {
-        // Arrange - .NET MailAddress rejects emails starting with dot
-        AddUserCommand command = new AddUserCommandBuilder()
-            .WithEmail(".test@example.com")
-            .Build();
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
 
     [Fact]
     public async Task PostUsers_WithEmailEndingWithDot_ReturnsCreated()
@@ -601,65 +359,9 @@ public class UsersControllerPostTests : BaseSystemTest
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
-    [Fact]
-    public async Task PostUsers_WithUserNameStartingWithUnderscore_ReturnsBadRequest()
-    {
-        // Arrange - Username cannot start with underscore according to regex
-        AddUserCommand command = new AddUserCommandBuilder()
-            .WithUserName("_username")
-            .Build();
 
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
 
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
 
-    [Fact]
-    public async Task PostUsers_WithUserNameEndingWithUnderscore_ReturnsBadRequest()
-    {
-        // Arrange - Username cannot end with underscore according to regex
-        AddUserCommand command = new AddUserCommandBuilder()
-            .WithUserName("username_")
-            .Build();
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostUsers_WithUserNameStartingWithHyphen_ReturnsBadRequest()
-    {
-        // Arrange - Username cannot start with hyphen according to regex
-        AddUserCommand command = new AddUserCommandBuilder()
-            .WithUserName("-username")
-            .Build();
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostUsers_WithUserNameEndingWithHyphen_ReturnsBadRequest()
-    {
-        // Arrange - Username cannot end with hyphen according to regex
-        AddUserCommand command = new AddUserCommandBuilder()
-            .WithUserName("username-")
-            .Build();
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
 
     [Fact]
     public async Task PostUsers_WithValidUserNameContainingHyphenAndUnderscore_ReturnsCreated()
@@ -677,20 +379,6 @@ public class UsersControllerPostTests : BaseSystemTest
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
     }
 
-    [Fact]
-    public async Task PostUsers_WithSingleCharacterUserName_ReturnsBadRequest()
-    {
-        // Arrange - Username must be at least 3 characters
-        AddUserCommand command = new AddUserCommandBuilder()
-            .WithUserName("a")
-            .Build();
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
 
     [Fact]
     public async Task PutUsers_OnPostEndpoint_ReturnsMethodNotAllowed()
@@ -718,34 +406,6 @@ public class UsersControllerPostTests : BaseSystemTest
 
         // Act
         HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostUsers_WithMalformedJsonMissingQuotes_ReturnsBadRequest()
-    {
-        // Arrange - JSON with unquoted property names
-        string malformedJson = "{email: \"test@example.com\", userName: \"testuser\"}";
-        var content = new StringContent(malformedJson, Encoding.UTF8, "application/json");
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", content);
-
-        // Assert
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
-    }
-
-    [Fact]
-    public async Task PostUsers_WithMalformedJsonExtraComma_ReturnsBadRequest()
-    {
-        // Arrange - JSON with trailing comma
-        string malformedJson = "{\"email\": \"test@example.com\", \"userName\": \"testuser\",}";
-        var content = new StringContent(malformedJson, Encoding.UTF8, "application/json");
-
-        // Act
-        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", content);
 
         // Assert
         Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);

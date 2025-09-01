@@ -203,6 +203,7 @@ AddItemToCart_DuplicateItem_ThrowsDuplicateItemException()
 ## Required Test Structure
 - **Use AAA pattern**: Add inline comments for Arrange, Act, and Assert sections
 - **Use Test Object Builders**: Always use builders for test data creation
+- **Use Theory Tests for Data Validation**: Prefer `[Theory]` with `[InlineData]` for testing multiple validation scenarios
 
 ## Test Object Builders (Mandatory Pattern)
 
@@ -448,6 +449,135 @@ Email email = new EmailBuilder().Build();
 var email = new Email("this.address.is.not.relevant.to.this@test.com");
 ```
 
+## Theory Tests for Data Validation (Recommended Pattern)
+
+For validation testing scenarios with multiple test cases, use `[Theory]` tests with `[InlineData]` attributes instead of multiple individual `[Fact]` tests.
+
+### ✅ When to Use Theory Tests
+
+Use `[Theory]` tests for:
+- **Input validation scenarios**: Testing multiple invalid/valid input combinations
+- **Boundary condition testing**: Testing values around validation boundaries
+- **Format validation**: Testing various invalid formats (emails, usernames, etc.)
+- **JSON/request validation**: Testing malformed request data
+- **Any scenario with 3+ similar test cases** that follow the same test pattern
+
+### ✅ Theory Test Benefits
+
+- **Maintainability**: Add new test cases by simply adding `[InlineData]` attributes
+- **Readability**: Related test cases grouped together, easier to see coverage patterns
+- **Less duplication**: Single test method handles multiple scenarios
+- **Cleaner test output**: Theory tests show individual parameterized results
+
+### ✅ Theory Test Examples
+
+#### Email Validation Theory Test
+```csharp
+[Theory]
+[InlineData("invalid-email")]
+[InlineData("")]
+[InlineData("   ")]
+[InlineData("\t\t")]
+[InlineData("testexample.com")]
+[InlineData("test@")]
+[InlineData("@example.com")]
+[InlineData("test@@example.com")]
+[InlineData(".test@example.com")]
+public async Task PostUsers_WithInvalidEmail_ReturnsBadRequest(string invalidEmail)
+{
+    // Arrange
+    AddUserCommand command = new AddUserCommandBuilder()
+        .WithEmail(invalidEmail)
+        .Build();
+
+    // Act
+    HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
+
+    // Assert
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+}
+```
+
+#### Username Validation Theory Test
+```csharp
+[Theory]
+[InlineData("")]
+[InlineData("   ")]
+[InlineData("\t\t")]
+[InlineData("ab")]
+[InlineData("a")]
+[InlineData("user name")]
+[InlineData("user@name!")]
+[InlineData("_username")]   
+[InlineData("username_")]  
+[InlineData("-username")]
+[InlineData("username-")]
+public async Task PostUsers_WithInvalidUserName_ReturnsBadRequest(string invalidUserName)
+{
+    // Arrange
+    AddUserCommand command = new AddUserCommandBuilder()
+        .WithUserName(invalidUserName)
+        .Build();
+
+    // Act
+    HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", ToJsonContent(command));
+
+    // Assert
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+}
+```
+
+#### JSON Format Validation Theory Test
+```csharp
+[Theory]
+[InlineData("""{"email": null, "userName": "testuser"}""")]
+[InlineData("""{"email": "test@example.com", "userName": null}""")]
+[InlineData("""{"email": "test@example.com", "userName": "testuser" """)]    // Missing closing brace
+[InlineData("""["email", "userName"]""")]                                     // Wrong JSON structure
+[InlineData("""{"userName": "testuser"}""")]                                 // Missing email property
+[InlineData("""{"email": "test@example.com"}""")]                           // Missing userName property
+[InlineData("""{}""")]                                                       // Empty object
+[InlineData("""{email: "test@example.com", userName: "testuser"}""")]       // Unquoted properties
+[InlineData("""{"email": "test@example.com", "userName": "testuser",}""")]  // Trailing comma
+public async Task PostUsers_WithInvalidJsonData_ReturnsBadRequest(string jsonData)
+{
+    // Arrange
+    var content = new StringContent(jsonData, Encoding.UTF8, "application/json");
+
+    // Act
+    HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/users", content);
+
+    // Assert
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+}
+```
+
+### ❌ Avoid: Multiple Individual Facts for Same Pattern
+
+```csharp
+// ❌ Don't create separate [Fact] methods for each validation case
+[Fact]
+public async Task PostUsers_WithEmptyEmail_ReturnsBadRequest() { /* ... */ }
+
+[Fact]
+public async Task PostUsers_WithInvalidEmailFormat_ReturnsBadRequest() { /* ... */ }
+
+[Fact]
+public async Task PostUsers_WithEmailMissingAtSymbol_ReturnsBadRequest() { /* ... */ }
+
+// ... 10 more similar methods
+
+// ✅ Use a single Theory test instead (see examples above)
+```
+
+### 🎯 When to Still Use Individual Fact Tests
+
+Use individual `[Fact]` tests when:
+- **Complex setup required**: Different test cases need significantly different arrangements
+- **Different assertions**: Test cases validate different aspects or outcomes
+- **Dynamic data generation**: Test data requires complex construction (e.g., `new string('a', 51)`)
+- **Single unique scenario**: Only one test case exists for the scenario
+
 ---
 
 # Boundary Condition Analysis
@@ -595,11 +725,27 @@ Unit Test: {MethodToTest}_{Scenario}_{ExpectedOutcome}
 Example: CalculateDiscount_PremiumUser_ReturnsDiscountedPrice
 ```
 
+## "Should I use [Fact] or [Theory] for my test?"
+
+```
+Multiple similar test cases (3+ validation scenarios)?
+├─ YES → Use [Theory] with [InlineData] attributes
+└─ NO → Does each test case have unique setup/assertions?
+   ├─ YES → Use individual [Fact] tests
+   └─ NO → Use [Theory] if similar pattern exists
+```
+
+**Examples:**
+- **[Theory]**: Email validation, username validation, JSON format validation
+- **[Fact]**: Duplicate email validation (requires setup), complex business logic tests
+
 ## "How do I create test data?"
 
 ```
 ✅ ALWAYS: Use Test Object Builders
 ✅ PRINCIPLE: Only specify properties relevant to the test
+✅ PREFERRED: Use [Theory] tests for validation scenarios
 ❌ NEVER: Create helper methods like CreateValidUser()
 ❌ NEVER: Use builders in the 'Act' section
+❌ AVOID: Multiple [Fact] tests for same validation pattern
 ```
