@@ -31,6 +31,11 @@ argument-hint: Optional instructions
     - **Code Quality**: Assess naming conventions, SOLID principles, error handling, and maintainability
     - **Project Standards**: Verify compliance with established coding conventions, testing patterns, and REST API standards
 
+4. **Identify possilbe easy to miss problems** such as
+    - Possible race conditions
+    - Possible deadlock scenarios
+    - N+1 query problems
+
 4. **Apply Domain Expertise**: Draw from your knowledge of:
     - .NET 9.0 best practices and modern C# features
     - Entity Framework and database design patterns

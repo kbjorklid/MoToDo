@@ -11,7 +11,7 @@ public static class UpdateToDoCommandHandler
 {
     public static class Codes
     {
-        public const string AccessDenied = "UpdateToDo.AccessDenied";
+        public const string UserNotAuthorized = "UpdateToDo.UserNotAuthorized";
     }
 
     /// <summary>
@@ -83,7 +83,7 @@ public static class UpdateToDoCommandHandler
     private static Result CheckAuthorization(ToDoList toDoList, UserId userId)
     {
         if (toDoList.UserId != userId)
-            return new Error(Codes.AccessDenied, "Access denied to this todo list.", ErrorType.Forbidden);
+            return new Error(Codes.UserNotAuthorized, "Access denied to this todo list.", ErrorType.Forbidden);
 
         return Result.Success();
     }
