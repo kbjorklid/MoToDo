@@ -31,3 +31,4 @@ argument-hint: Describe the vertical slice to implement
    6.1: If AND ONLY IF user requests the creation of systm tests, do the following:
       - Read TESTING_CONVENTIONS.md
       - Implement the system tests. Think.
+      - After implementation is completed, run all the tests.

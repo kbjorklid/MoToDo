@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
 using Testcontainers.PostgreSql;
 using ToDoLists.Infrastructure;
@@ -26,6 +27,7 @@ public class DatabaseFixture : IAsyncLifetime
         // Configure PostgreSQL container matching docker-compose.yml settings
         DbContainer = new PostgreSqlBuilder()
             .WithImage("postgres:16")
+            .WithLogger(NullLogger.Instance)
             .WithDatabase("pertified")
             .WithUsername("postgres")
             .WithPassword("postgres")
@@ -60,6 +62,10 @@ public class DatabaseFixture : IAsyncLifetime
                 {
                     // Reduce logging noise in tests
                     logging.SetMinimumLevel(LogLevel.Warning);
+                    // Suppress HTTPS redirection warnings in tests
+                    logging.AddFilter("Microsoft.AspNetCore.HttpsPolicy.HttpsRedirectionMiddleware", LogLevel.Error);
+                    // Suppress EF Core database command errors in tests
+                    logging.AddFilter("Microsoft.EntityFrameworkCore.Database.Command", LogLevel.Critical);
                 });
             });
 

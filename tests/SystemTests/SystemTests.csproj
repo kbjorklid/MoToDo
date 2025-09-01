@@ -25,6 +25,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="appsettings.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\ApiHost\ApiHost.csproj" />
     <ProjectReference Include="..\..\src\Users\Users.Contracts\Users.Contracts.csproj" />
     <ProjectReference Include="..\..\src\ToDoLists\ToDoLists.Contracts\ToDoLists.Contracts.csproj" />
