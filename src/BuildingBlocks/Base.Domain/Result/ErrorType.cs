@@ -8,5 +8,6 @@ public enum ErrorType
     Failure,
     Validation,
     NotFound,
+    Forbidden,
     Unexpected
 }

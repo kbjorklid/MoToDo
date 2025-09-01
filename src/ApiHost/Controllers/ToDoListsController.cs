@@ -52,14 +52,22 @@ public class ToDoListsController : ControllerBase
     /// Retrieves a todo list by its unique identifier.
     /// </summary>
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(object), StatusCodes.Status200OK)] // TODO: Create proper DTO for get operation
+    [ProducesResponseType(typeof(ToDoListDetailDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public Task<IActionResult> GetToDoList(string id)
+    public async Task<IActionResult> GetToDoList(string id, [FromQuery] string userId)
     {
-        // TODO: Implement GetToDoListQuery and handler
-        return Task.FromResult<IActionResult>(Ok(new { message = "GetToDoList endpoint not yet implemented" }));
+        var query = new GetToDoListQuery(id, userId);
+        Result<ToDoListDetailDto> result = await _messageBus.InvokeAsync<Result<ToDoListDetailDto>>(query);
+
+        if (result.IsSuccess)
+        {
+            return Ok(result.Value);
+        }
+
+        return HandleError(result.Error);
     }
 
     /// <summary>
@@ -92,6 +100,7 @@ public class ToDoListsController : ControllerBase
         {
             ErrorType.Validation => CreateValidationProblem(error),
             ErrorType.NotFound => NotFound(CreateProblemDetails("Resource not found", error)),
+            ErrorType.Forbidden => StatusCode(StatusCodes.Status403Forbidden, CreateProblemDetails("Forbidden", error)),
             _ => Problem(
                 title: "An error occurred while processing the request",
                 detail: error.Description,
@@ -121,6 +130,7 @@ public class ToDoListsController : ControllerBase
         {
             ErrorType.NotFound => StatusCodes.Status404NotFound,
             ErrorType.Validation => StatusCodes.Status400BadRequest,
+            ErrorType.Forbidden => StatusCodes.Status403Forbidden,
             _ => StatusCodes.Status500InternalServerError
         };
     }

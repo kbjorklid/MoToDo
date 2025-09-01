@@ -12,8 +12,6 @@ servers:
   - url: /api/v1
     description: Version 1 API
 
-security:
-  - BearerAuth: []
 
 paths:
   /todo-lists:
@@ -23,6 +21,14 @@ paths:
       summary: Get user's todo lists
       description: Retrieve all todo lists owned by the authenticated user
       parameters:
+        - name: userId
+          in: query
+          required: true
+          description: The unique identifier of the user
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440001"
         - name: sort
           in: query
           description: Sort criteria (createdAt, title, -createdAt, -title)
@@ -58,8 +64,6 @@ paths:
                       $ref: '#/components/schemas/ToDoListSummary'
                   pagination:
                     $ref: '#/components/schemas/PaginationInfo'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -92,8 +96,6 @@ paths:
                 $ref: '#/components/schemas/ToDoListDetail'
         '400':
           $ref: '#/components/responses/ValidationProblem'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
@@ -113,6 +115,15 @@ paths:
         - ToDoLists
       summary: Get a specific todo list
       description: Retrieve a specific todo list with all its todos
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          description: The unique identifier of the user
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440001"
       responses:
         '200':
           description: Todo list retrieved successfully
@@ -120,10 +131,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ToDoListDetail'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -134,6 +141,15 @@ paths:
         - ToDoLists
       summary: Update todo list title
       description: Update the title of an existing todo list
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          description: The unique identifier of the user
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440001"
       requestBody:
         required: true
         content:
@@ -158,10 +174,6 @@ paths:
                 $ref: '#/components/schemas/ToDoListDetail'
         '400':
           $ref: '#/components/responses/ValidationProblem'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -172,13 +184,18 @@ paths:
         - ToDoLists
       summary: Delete a todo list
       description: Delete an existing todo list and all its todos
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          description: The unique identifier of the user
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440001"
       responses:
         '204':
           description: Todo list deleted successfully
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -200,6 +217,15 @@ paths:
         - ToDos
       summary: Add a todo to a list
       description: Add a new todo item to an existing todo list
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          description: The unique identifier of the user
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440001"
       requestBody:
         required: true
         content:
@@ -224,10 +250,6 @@ paths:
                 $ref: '#/components/schemas/ToDo'
         '400':
           $ref: '#/components/responses/ValidationProblem'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -257,6 +279,15 @@ paths:
         - ToDos
       summary: Update a todo item
       description: Update the title and/or completion status of a todo item
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          description: The unique identifier of the user
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440001"
       requestBody:
         required: true
         content:
@@ -284,10 +315,6 @@ paths:
                 $ref: '#/components/schemas/ToDo'
         '400':
           $ref: '#/components/responses/ValidationProblem'
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
@@ -298,26 +325,24 @@ paths:
         - ToDos
       summary: Remove a todo from a list
       description: Remove an existing todo item from a todo list
+      parameters:
+        - name: userId
+          in: query
+          required: true
+          description: The unique identifier of the user
+          schema:
+            type: string
+            format: uuid
+            example: "550e8400-e29b-41d4-a716-446655440001"
       responses:
         '204':
           description: Todo removed successfully
-        '401':
-          $ref: '#/components/responses/Unauthorized'
-        '403':
-          $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalServerError'
 
 components:
-  securitySchemes:
-    BearerAuth:
-      type: http
-      scheme: bearer
-      bearerFormat: JWT
-      description: JWT token for authentication
-
   schemas:
     ToDoListSummary:
       type: object
@@ -515,30 +540,6 @@ components:
                 - "Title cannot be empty"
               "": 
                 - "Todo list cannot contain more than 100 items"
-
-    Unauthorized:
-      description: Authentication required
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ProblemDetails'
-          example:
-            type: "https://tools.ietf.org/html/rfc7231#section-6.5.1"
-            title: "Unauthorized"
-            status: 401
-            detail: "Authentication token is required"
-
-    Forbidden:
-      description: Access denied to the requested resource
-      content:
-        application/json:
-          schema:
-            $ref: '#/components/schemas/ProblemDetails'
-          example:
-            type: "https://tools.ietf.org/html/rfc7231#section-6.5.3"
-            title: "Forbidden"
-            status: 403
-            detail: "Access denied to this todo list"
 
     NotFound:
       description: Requested resource not found
