@@ -1,3 +1,5 @@
+using Base.Contracts;
+
 namespace Users.Contracts;
 
 /// <summary>

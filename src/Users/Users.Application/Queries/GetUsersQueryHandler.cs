@@ -1,3 +1,4 @@
+using Base.Contracts;
 using Base.Domain;
 using Base.Domain.Result;
 using Microsoft.EntityFrameworkCore;

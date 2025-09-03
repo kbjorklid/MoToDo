@@ -1,7 +1,7 @@
-namespace ToDoLists.Contracts;
+namespace Base.Contracts;
 
 /// <summary>
-/// Contains pagination metadata for paginated todo list responses.
+/// Contains pagination metadata for paginated responses.
 /// </summary>
 /// <param name="TotalItems">Total number of items available.</param>
 /// <param name="TotalPages">Total number of pages available.</param>
@@ -11,4 +11,5 @@ public sealed record PaginationInfo(
     int TotalItems,
     int TotalPages,
     int CurrentPage,
-    int Limit);
+    int Limit
+);

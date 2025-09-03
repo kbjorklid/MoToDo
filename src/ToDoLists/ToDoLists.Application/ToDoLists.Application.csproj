@@ -4,6 +4,7 @@
     <ProjectReference Include="..\ToDoLists.Domain\ToDoLists.Domain.csproj" />
     <ProjectReference Include="..\ToDoLists.Contracts\ToDoLists.Contracts.csproj" />
     <ProjectReference Include="..\..\BuildingBlocks\Base.Application\Base.Application.csproj" />
+    <ProjectReference Include="..\..\BuildingBlocks\Base.Contracts\Base.Contracts.csproj" />
   </ItemGroup>
 
   <ItemGroup>

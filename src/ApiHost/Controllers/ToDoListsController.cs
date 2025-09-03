@@ -19,6 +19,12 @@ public sealed record AddToDoRequest(string Title);
 public sealed record UpdateToDoRequest(string? Title, bool? IsCompleted);
 
 /// <summary>
+/// Request model for updating todo list title.
+/// </summary>
+/// <param name="Title">The new title for the todo list.</param>
+public sealed record UpdateToDoListTitleRequest(string Title);
+
+/// <summary>
 /// REST API controller for todo list management operations.
 /// </summary>
 [ApiController]
@@ -96,6 +102,40 @@ public class ToDoListsController : ControllerBase
         if (result.IsSuccess)
         {
             return Ok(result.Value);
+        }
+
+        return HandleError(result.Error);
+    }
+
+    /// <summary>
+    /// Updates the title of an existing todo list.
+    /// </summary>
+    [HttpPut("{id}")]
+    [ProducesResponseType(typeof(ToDoListDetailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> UpdateToDoListTitle(
+        string id,
+        [FromQuery] string userId,
+        [FromBody] UpdateToDoListTitleRequest request)
+    {
+        var command = new UpdateToDoListTitleCommand(id, userId, request.Title);
+        Result<UpdateToDoListTitleResult> result = await _messageBus.InvokeAsync<Result<UpdateToDoListTitleResult>>(command);
+
+        if (result.IsSuccess)
+        {
+            // Return the complete ToDoListDetailDto by fetching the updated list
+            var getQuery = new GetToDoListQuery(id, userId);
+            Result<ToDoListDetailDto> detailResult = await _messageBus.InvokeAsync<Result<ToDoListDetailDto>>(getQuery);
+
+            if (detailResult.IsSuccess)
+            {
+                return Ok(detailResult.Value);
+            }
+
+            return HandleError(detailResult.Error);
         }
 
         return HandleError(result.Error);
