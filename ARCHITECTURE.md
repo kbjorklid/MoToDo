@@ -284,7 +284,7 @@ public class SomeClass
 Example of handling a command:
 
 ```csharp
-    // fhere, the first parameter must be the type of the command 
+    // here, the first parameter must be the type of the command 
     public static async Task<Result<AddUserResult>> Handle(SomeCommandType command, ISomeDependencyInjectable someService)
     {
         //...
@@ -292,8 +292,20 @@ Example of handling a command:
 ```
 
 Wolverine discovers these kinds of static methods based on the type of the first parameter.
-The first parameter must be the type of object sent to the message bus.
+The first parameter must be the type of object sent to the message bus for this discovery to work.
 
 Wolverine dependency-injects rest of the parameters.
+
+The discovery
+is enable per-project with configuration in Program.cs:
+```csharp
+builder.Host.UseWolverine(opts =>
+{
+    // Auto-discover message handlers
+    opts.Discovery.IncludeAssembly(typeof(ModuleA.Application.AssemblyMarker).Assembly);
+    opts.Discovery.IncludeAssembly(typeof(ModuleB.Application.AssemblyMarker).Assembly);
+    // ...
+});
+```
 
 For AI assistants: To learn more about Wolverine, you can use the context7 mcp server.
