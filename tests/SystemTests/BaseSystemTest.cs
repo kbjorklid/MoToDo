@@ -77,10 +77,9 @@ public class DatabaseFixture : IAsyncLifetime
         await todoListsDbContext.Database.MigrateAsync();
     }
 
-    public async Task DisposeAsync()
+    public Task DisposeAsync()
     {
-        await WebAppFactory.DisposeAsync();
-        await DbContainer.DisposeAsync();
+        return Task.CompletedTask;
     }
 }
 
