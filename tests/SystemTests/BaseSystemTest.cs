@@ -10,6 +10,7 @@ using Microsoft.Extensions.Time.Testing;
 using Testcontainers.PostgreSql;
 using ToDoLists.Infrastructure;
 using Users.Infrastructure;
+using Wolverine;
 
 namespace SystemTests;
 
@@ -56,6 +57,12 @@ public class DatabaseFixture : IAsyncLifetime
                     // Replace the real TimeProvider with our FakeTimeProvider for deterministic testing
                     services.Remove(services.Single(descriptor => descriptor.ServiceType == typeof(TimeProvider)));
                     services.AddSingleton<TimeProvider>(FakeTimeProvider);
+
+                    // Configure Wolverine for solo mode in tests
+                    services.Configure<WolverineOptions>(opts =>
+                    {
+                        opts.Durability.Mode = DurabilityMode.Solo;
+                    });
                 });
 
                 builder.ConfigureLogging(logging =>

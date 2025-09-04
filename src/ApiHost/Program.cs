@@ -30,6 +30,12 @@ builder.Host.UseWolverine(opts =>
 
     // Allow full messaging capabilities for domain event publishing
     // opts.Durability.Mode = DurabilityMode.MediatorOnly;
+
+    if (builder.Environment.IsDevelopment())
+    {
+        // Optimize Wolverine for usage as if there would never be more than one node running
+        opts.Durability.Mode = DurabilityMode.Solo;
+    }
 });
 
 WebApplication app = builder.Build();
