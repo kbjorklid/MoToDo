@@ -9,15 +9,12 @@ namespace SystemTests.ToDoLists;
 /// <summary>
 /// System tests for PUT /todo-lists/{listId}/todos/{todoId} endpoint.
 /// </summary>
-public class ToDoListsControllerPutTodosTests : BaseSystemTest, IAsyncLifetime
+public class ToDoListsControllerPutTodosTests : BaseSystemTest
 {
     public ToDoListsControllerPutTodosTests(DatabaseFixture databaseFixture) : base(databaseFixture)
     {
     }
 
-    public Task InitializeAsync() => Task.CompletedTask;
-
-    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task PutTodos_WithValidTitleUpdate_ReturnsOkWithUpdatedTodo()

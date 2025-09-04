@@ -7,15 +7,12 @@ namespace SystemTests.ToDoLists;
 /// <summary>
 /// System tests for the GET /todo-lists endpoint (list all todo lists for a user).
 /// </summary>
-public class ToDoListsControllerGetListsTests : BaseSystemTest, IAsyncLifetime
+public class ToDoListsControllerGetListsTests : BaseSystemTest
 {
     public ToDoListsControllerGetListsTests(DatabaseFixture databaseFixture) : base(databaseFixture)
     {
     }
 
-    public Task InitializeAsync() => Task.CompletedTask;
-
-    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task GetToDoLists_WithValidUserId_ReturnsOkWithToDoListsSummaries()

@@ -8,15 +8,12 @@ namespace SystemTests.ToDoLists;
 /// <summary>
 /// System tests for ToDoLists POST endpoints.
 /// </summary>
-public class ToDoListsControllerPostTests : BaseSystemTest, IAsyncLifetime
+public class ToDoListsControllerPostTests : BaseSystemTest
 {
     public ToDoListsControllerPostTests(DatabaseFixture databaseFixture) : base(databaseFixture)
     {
     }
 
-    public Task InitializeAsync() => Task.CompletedTask;
-
-    public Task DisposeAsync() => Task.CompletedTask;
 
     [Fact]
     public async Task PostToDoLists_WithValidData_ReturnsCreatedWithToDoListId()
