@@ -28,8 +28,8 @@ builder.Host.UseWolverine(opts =>
     opts.Discovery.IncludeAssembly(typeof(Users.Application.AssemblyMarker).Assembly);
     opts.Discovery.IncludeAssembly(typeof(ToDoLists.Application.AssemblyMarker).Assembly);
 
-    // Configure for mediator usage
-    opts.Durability.Mode = DurabilityMode.MediatorOnly;
+    // Allow full messaging capabilities for domain event publishing
+    // opts.Durability.Mode = DurabilityMode.MediatorOnly;
 });
 
 WebApplication app = builder.Build();

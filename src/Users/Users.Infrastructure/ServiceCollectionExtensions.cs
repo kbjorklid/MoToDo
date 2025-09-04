@@ -20,9 +20,11 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services,
         string connectionString)
     {
-        // Register DbContext
-        services.AddDbContext<UsersDbContext>(options =>
-            options.UseNpgsql(connectionString));
+        // Register DbContext with IMessageBus injection
+        services.AddDbContext<UsersDbContext>((serviceProvider, options) =>
+        {
+            options.UseNpgsql(connectionString);
+        });
 
         // Register repositories
         services.AddScoped<IUserRepository, UserRepository>();
