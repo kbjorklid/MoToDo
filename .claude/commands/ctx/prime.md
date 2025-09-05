@@ -18,3 +18,8 @@ when user subsequently requests changes to the project.
 **User Input:** rest, api, or similar: **Read:** REST_CONVENTIONS.md
 **User Input:** archtecture, or similar: **Read:** ARCHITECTURE.md
 **User Input:** all or everything: **Read:** All the documents mentioned above.
+
+If user input is missing, ask what what you should read. Example:
+"What do you want me to read? You can choose 'all', or any of: 'code', 'test', 'rest', and/or 'architecture'."
+
+After reading, simply state: "I've finished reading. What's next?"

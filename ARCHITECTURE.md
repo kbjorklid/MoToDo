@@ -308,4 +308,60 @@ builder.Host.UseWolverine(opts =>
 });
 ```
 
+## Domain Events Publishing
+
+Domain events are automatically published through the DbContext's `SaveChangesAsync` method using the Wolverine message bus. Here's how the implementation works:
+
+### Implementation Pattern
+
+Each module's DbContext should override `SaveChangesAsync` to:
+1. **Collect unpublished domain events** from aggregate roots before saving changes
+2. **Save changes** to the database
+3. **Publish domain events** only if the database save was successful
+4. **Clear domain events** from aggregate roots after successful publishing
+
+### Example Implementation
+
+```csharp
+public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+{
+    List<IDomainEvent> unpublishedDomainEvents = GetUnpublishedDomainEvents();
+    
+    int changesSaved = await base.SaveChangesAsync(cancellationToken);
+    
+    await PublishDomainEventsIfSuccessful(changesSaved, unpublishedDomainEvents);
+    
+    return changesSaved;
+}
+
+private List<IDomainEvent> GetUnpublishedDomainEvents()
+{
+    return ChangeTracker
+        .Entries<AggregateRoot<TId>>()
+        .Where(entry => entry.Entity.GetDomainEvents().Count != 0)
+        .SelectMany(entry => entry.Entity.GetDomainEvents())
+        .ToList();
+}
+
+private async Task PublishDomainEventsIfSuccessful(int changesSaved, List<IDomainEvent> domainEvents)
+{
+    const int NoChanges = 0;
+    
+    if (changesSaved == NoChanges || _messageBus is null)
+        return;
+        
+    await PublishDomainEvents(domainEvents);
+    ClearDomainEventsFromAggregateRoots();
+}
+```
+
+### Key Principles
+
+- **Transactional Consistency**: Domain events are only published after successful database changes
+- **Automatic Collection**: Events are automatically gathered from all tracked aggregate roots
+- **Clean State**: Domain events are cleared from aggregates after successful publishing
+- **Wolverine Integration**: Events are published through the Wolverine message bus using `PublishAsync`
+
+This pattern ensures that domain events maintain consistency with database changes and are automatically handled without requiring explicit event publishing in command handlers.
+
 For AI assistants: To learn more about Wolverine, you can use the context7 mcp server.

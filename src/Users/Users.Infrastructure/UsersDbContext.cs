@@ -66,7 +66,7 @@ public sealed class UsersDbContext : DbContext, IUsersQueryContext
 
     private async Task PublishDomainEvents(List<IDomainEvent> domainEvents)
     {
-        foreach (IDomainEvent domainEvent in domainEvents) 
+        foreach (IDomainEvent domainEvent in domainEvents)
             await _messageBus!.PublishAsync(domainEvent);
     }
 
@@ -76,7 +76,7 @@ public sealed class UsersDbContext : DbContext, IUsersQueryContext
             .Entries<AggregateRoot<UserId>>()
             .Select(entry => entry.Entity);
 
-        foreach (AggregateRoot<UserId> aggregateRoot in aggregateRootsWithEvents) 
+        foreach (AggregateRoot<UserId> aggregateRoot in aggregateRootsWithEvents)
             aggregateRoot.ClearDomainEvents();
     }
 }
