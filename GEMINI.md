@@ -12,7 +12,7 @@ This project maintains detailed documentation across multiple files. Read the ap
 - **[CODING_CONVENTIONS.md](./CODING_CONVENTIONS.md)** - DDD implementations, error handling, data mapping, naming conventions, and inheritance rules
 - **[REST_CONVENTIONS.md](./REST_CONVENTIONS.md)** - API design standards, versioning, URI conventions, JSON formatting, filtering, sorting, and pagination
 - **[TESTING_CONVENTIONS.md](./TESTING_CONVENTIONS.md)** - Testing strategy (test diamond), project organization, system vs unit test guidelines, and Test Object Builder patterns
-
+- **[WOLVERINE.md](devdocs/WOLVERINE.md)** - An index of links to Wolverine's guide for more information about the library.
 ## Development Commands
 
 ### Building and Testing
@@ -64,11 +64,6 @@ docker exec -it motodo-postgres psql -U postgres -d motodo
 - **Testing**: Test Diamond strategy with XUnit, NSubstitute, and Test Object Builders
 - **Error Handling**: Result pattern, validation exceptions, manual mapping
 - **REST**: Versioned APIs, kebab-case URIs, camelCase JSON
-
-> **For complete conventions, see:**
-> - **[CODING_CONVENTIONS.md](./CODING_CONVENTIONS.md)** - DDD, naming, error handling, mapping
-> - **[TESTING_CONVENTIONS.md](./TESTING_CONVENTIONS.md)** - Test strategy, organization, practices
-> - **[REST_CONVENTIONS.md](./REST_CONVENTIONS.md)** - API design standards
 
 ## Quick Reference
 
