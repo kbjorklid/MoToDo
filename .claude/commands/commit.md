@@ -6,8 +6,8 @@ argument-hint: Optional instructions
 ## Context
 
 - Current git status: !`git status`
-- User input: $ARGUMENTS
 - Recent commits: !`git log --oneline -5`
+- User input: $ARGUMENTS
 
 ## Instructions
 

@@ -48,15 +48,8 @@ public class SortParameterParser<TEnum> : ISortParameterParser<TEnum> where TEnu
             return (_defaultSortBy, _defaultAscending);
         }
 
-        bool ascending = true;
-        string sortField = sort;
-
-        // Check if sort parameter starts with '-' for descending order
-        if (sort.StartsWith('-'))
-        {
-            ascending = false;
-            sortField = sort[1..]; // Remove the '-' prefix
-        }
+        bool ascending = IsAscending(sort);
+        string sortField = SortFieldName(sort);
 
         TEnum? sortByResult = _fieldMapper(sortField.ToLowerInvariant());
 
@@ -67,6 +60,10 @@ public class SortParameterParser<TEnum> : ISortParameterParser<TEnum> where TEnu
             $"{_errorCodePrefix}.UnsupportedField",
             $"Unsupported sort field: '{sortField}'. Supported fields: {_supportedFieldsDescription}.",
             ErrorType.Validation);
-
     }
+
+    private static bool IsAscending(string sort) => !sort.StartsWith('-');
+
+    private static string SortFieldName(string sort) => IsAscending(sort) ? sort : sort[1..];
+
 }

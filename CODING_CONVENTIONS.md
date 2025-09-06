@@ -115,6 +115,65 @@ return new Error(Codes.Empty, "Email address cannot be empty.");
 
 - Use manual mapping, e.g. extension methods or static methods. Do not use AutoMapper or similar.
 
+# Code Structure and Readability
+
+## Extract Inline Logic to Well-Named Methods
+
+When you have complex inline logic or multiple operations within a method, extract them into well-named private methods to improve readability and maintainability.
+
+### Guidelines
+
+- Replace inline conditional logic and string manipulation with descriptive method calls
+- Use method names that clearly express the intent and return type
+- Keep the main method flow readable by focusing on the "what" rather than the "how"
+- Extract logic even for simple operations if it improves clarity
+
+### Example
+
+```csharp
+// Before: Inline logic obscures the main flow
+public Result<(TEnum, bool)> Parse(string sort)
+{
+    if (string.IsNullOrWhiteSpace(sort))
+        return (_defaultSortBy, _defaultAscending);
+
+    bool ascending = true;
+    string sortField = sort;
+
+    // Check if sort parameter starts with '-' for descending order
+    if (sort.StartsWith('-'))
+    {
+        ascending = false;
+        sortField = sort[1..]; // Remove the '-' prefix
+    }
+
+    // ... rest of method
+}
+
+// After: Extracted logic makes intent clear
+public Result<(TEnum, bool)> Parse(string sort)
+{
+    if (string.IsNullOrWhiteSpace(sort))
+        return (_defaultSortBy, _defaultAscending);
+
+    bool ascending = IsAscending(sort);
+    string sortField = SortFieldName(sort);
+    
+    // ... rest of method
+}
+
+private static bool IsAscending(string sort) => !sort.StartsWith('-');
+
+private static string SortFieldName(string sort) => IsAscending(sort) ? sort : sort[1..];
+```
+
+### Benefits
+
+- **Self-documenting code**: Method names replace the need for comments
+- **Easier testing**: Small methods can be tested independently if needed
+- **Reduced cognitive load**: Main method focuses on business logic flow
+- **Reusability**: Extracted methods can be reused elsewhere if needed
+
 # Repository Query Patterns
 
 ## QueryCriteria Pattern
