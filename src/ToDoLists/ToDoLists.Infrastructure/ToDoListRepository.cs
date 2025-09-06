@@ -40,7 +40,6 @@ internal sealed class ToDoListRepository : IToDoListRepository
             .Include(tl => tl.Todos)
             .Where(tl => tl.UserId == criteria.UserId);
 
-        // Apply sorting
         query = criteria.SortBy switch
         {
             ToDoListsSortBy.CreatedAt => criteria.Ascending
@@ -80,6 +79,15 @@ internal sealed class ToDoListRepository : IToDoListRepository
         {
             _context.ToDoLists.Remove(toDoList);
         }
+    }
+
+    public async Task<int> DeleteByUserIdAsync(UserId userId, CancellationToken cancellationToken = default)
+    {
+        int deletedCount = await _context.ToDoLists
+            .Where(tl => tl.UserId == userId)
+            .ExecuteDeleteAsync(cancellationToken);
+
+        return deletedCount;
     }
 
     public async Task<bool> ExistsAsync(ToDoListId id, CancellationToken cancellationToken = default)

@@ -53,6 +53,14 @@ public interface IToDoListRepository
     Task DeleteAsync(ToDoListId id, CancellationToken cancellationToken = default);
 
     /// <summary>
+    /// Deletes all ToDoLists owned by a specific user from the repository.
+    /// </summary>
+    /// <param name="userId">The unique identifier of the user whose todo lists should be deleted.</param>
+    /// <param name="cancellationToken">Cancellation token.</param>
+    /// <returns>The number of todo lists deleted.</returns>
+    Task<int> DeleteByUserIdAsync(UserId userId, CancellationToken cancellationToken = default);
+
+    /// <summary>
     /// Checks if a ToDoList exists with the specified identifier.
     /// </summary>
     /// <param name="id">The unique identifier to check.</param>
