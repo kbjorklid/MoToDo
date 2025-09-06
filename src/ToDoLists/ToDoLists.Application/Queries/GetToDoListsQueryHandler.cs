@@ -1,6 +1,8 @@
+using Base.Application;
 using Base.Contracts;
 using Base.Domain;
 using Base.Domain.Result;
+using ToDoLists.Application.Helpers;
 using ToDoLists.Contracts;
 using ToDoLists.Domain;
 
@@ -29,36 +31,28 @@ public static class GetToDoListsQueryHandler
         IToDoListRepository toDoListRepository,
         CancellationToken cancellationToken)
     {
-        // Parse and validate UserId
         Result<UserId> userIdResult = UserId.FromString(query.UserId);
         if (userIdResult.IsFailure)
             return userIdResult.Error;
 
-        // Create pagination parameters
-        Result<PagingParameters> pagingParametersResult = PagingParameters.Create(
-            query.Page ?? PagingParameters.DefaultPage,
-            query.Limit ?? PagingParameters.DefaultLimit
-        );
-
+        Result<PagingParameters> pagingParametersResult = PaginationHelpers.CreatePagingParameters(query.Page, query.Limit);
         if (pagingParametersResult.IsFailure)
             return pagingParametersResult.Error;
 
-        // Parse sort parameter
-        (ToDoListsSortBy sortBy, bool ascending) = ParseSortParameter(query.Sort);
+        Result<(ToDoListsSortBy sortBy, bool ascending)> sortResult = ToDoListsSortParameterParser.Parse(query.Sort);
+        if (sortResult.IsFailure)
+            return sortResult.Error;
 
-        // Build query criteria
         Result<ToDoListQueryCriteria> criteriaResult = ToDoListQueryCriteria
             .Builder(pagingParametersResult.Value, userIdResult.Value)
-            .WithSortBy(sortBy, ascending)
+            .WithSortBy(sortResult.Value.sortBy, sortResult.Value.ascending)
             .Build();
 
         if (criteriaResult.IsFailure)
             return criteriaResult.Error;
 
-        // Execute query
         PagedResult<ToDoList> pagedResult = await toDoListRepository.FindToDoListsAsync(criteriaResult.Value, cancellationToken);
 
-        // Map to DTOs
         var summaryDtos = pagedResult.Data
             .Select(tl => new ToDoListSummaryDto(
                 tl.Id.Value,
@@ -68,31 +62,9 @@ public static class GetToDoListsQueryHandler
                 tl.UpdatedAt))
             .ToList();
 
-        var paginationInfo = new PaginationInfo(
-            pagedResult.TotalItems,
-            pagedResult.TotalPages,
-            pagedResult.CurrentPage,
-            pagedResult.Limit
-        );
+        PaginationInfo paginationInfo = PaginationHelpers.CreatePaginationInfo(pagedResult);
 
         return new GetToDoListsResult(summaryDtos.AsReadOnly(), paginationInfo);
     }
 
-    private static (ToDoListsSortBy sortBy, bool ascending) ParseSortParameter(string? sort)
-    {
-        if (string.IsNullOrWhiteSpace(sort))
-            return (ToDoListsSortBy.CreatedAt, false); // Default to newest first
-
-        bool ascending = !sort.StartsWith('-');
-        string fieldName = ascending ? sort : sort[1..];
-
-        ToDoListsSortBy sortBy = fieldName.ToLowerInvariant() switch
-        {
-            "title" => ToDoListsSortBy.Title,
-            "createdat" => ToDoListsSortBy.CreatedAt,
-            _ => ToDoListsSortBy.CreatedAt
-        };
-
-        return (sortBy, ascending);
-    }
 }
