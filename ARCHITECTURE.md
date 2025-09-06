@@ -510,4 +510,66 @@ private async Task PublishDomainEventsIfSuccessful(int changesSaved, List<IDomai
 
 This pattern ensures that domain events maintain consistency with database changes and are automatically handled without requiring explicit event publishing in command handlers.
 
+## Converting Domain Events to Integration Events
+
+When domain events need to be communicated to other modules, they should be converted to integration events through dedicated handler classes in the Application layer.
+
+### Pattern Implementation
+
+**Domain Event to Integration Event Conversion:**
+1. **Domain events** remain internal to the module (e.g., `UserDeletedEvent` in `Users.Domain`)
+2. **Integration events** are defined in the module's Contracts project (e.g., `UserDeletedIntegrationEvent` in `Users.Contracts`)
+3. **Conversion handlers** in the Application layer transform domain events to integration events
+
+### File Organization
+
+Each module should follow a consistent file naming pattern for integration event handling:
+
+**In `ModuleName.Contracts`:**
+- **`IntegrationEvents.cs`** - Single file containing all integration events for the module
+  ```csharp
+  // Users.Contracts/IntegrationEvents.cs
+  namespace Users.Contracts;
+  
+  public record UserDeletedIntegrationEvent(DateTime OccurredOn, string UserId) : IntegrationEvent(OccurredOn);
+  public record UserCreatedIntegrationEvent(DateTime OccurredOn, string UserId, string Email) : IntegrationEvent(OccurredOn);
+  ```
+
+**In `ModuleName.Application`:**
+- **`DomainToIntegrationEventHandlers.cs`** - Single file containing all domain-to-integration event conversion handlers
+  ```csharp
+  // Users.Application/DomainToIntegrationEventHandlers.cs
+  namespace Users.Application;
+  
+  public class DomainToIntegrationEventHandlers
+  {
+      public static async Task Handle(UserDeletedEvent domainEvent, IMessageBus bus)
+      {
+          UserDeletedIntegrationEvent integrationEvent = new(domainEvent.OccurredOn, domainEvent.UserId.ToString());
+          await bus.PublishAsync(integrationEvent);
+      }
+      
+      public static async Task Handle(UserCreatedEvent domainEvent, IMessageBus bus)
+      {
+          UserCreatedIntegrationEvent integrationEvent = new(domainEvent.OccurredOn, domainEvent.UserId.ToString(), domainEvent.Email.Value);
+          await bus.PublishAsync(integrationEvent);
+      }
+  }
+  ```
+
+This naming convention provides:
+- **Consistency** across all modules
+- **Single source of truth** for integration events per module
+- **Easy discoverability** of conversion logic
+- **Clear separation** between public contracts and internal conversion handlers
+
+### Key Benefits
+
+- **Encapsulation**: Domain event structure can evolve without affecting other modules
+- **Clean Boundaries**: Other modules only see integration events, not internal domain implementation
+- **Data Transformation**: Allows different data representations between internal and external contracts
+- **Module Independence**: Maintains strict separation between module internals and public contracts
+
+The conversion handlers are automatically discovered by Wolverine through the existing assembly registration mechanism described earlier in this document. This pattern maintains clean architecture boundaries while enabling proper inter-module communication through well-defined integration events.
+
 For AI assistants: To learn more about Wolverine, you can use the context7 mcp server.
