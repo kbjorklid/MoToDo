@@ -161,12 +161,16 @@ The project dependencies flow inwards, creating a directed acyclic graph.
 
 * **Contents:**
     * ASP.NET Core REST controllers.
+    * API-specific DTOs for request/response models.
 * **Rules:**
     * Controllers must be "thin."
+    * **API Isolation Requirement:** Controllers must NOT use module contract objects directly in the REST API. Instead, define separate API DTOs to prevent tight coupling between external API surface and internal module contracts.
     * An API endpoint's only responsibilities are:
-        1.  Receive an HTTP request.
-        2.  Create and send the corresponding Command or Query (defined in a module's `Contracts` project) to the Application layer or message bus.
-        3.  Return the result as an HTTP response.
+        1.  Receive an HTTP request using API-specific DTOs.
+        2.  Map API DTOs to module contracts (Commands/Queries).
+        3.  Send the corresponding Command or Query to the message bus.
+        4.  Map internal results back to API response DTOs.
+        5.  Return the result as an HTTP response.
 
 ## Inter-Module Communication in Action
 
@@ -235,6 +239,72 @@ Let's trace a generic cross-module workflow:
 5.  **Completion:** Control and the `ResultDto` return to the `DoSomethingInModuleACommandHandler`, which can now complete its original task.
 
 This sequence allows modules to interact in a controlled way, exposing only their public API (`Contracts`) while hiding their implementation details.
+
+## API Design Principles
+
+### Separation of API and Module Contracts
+
+The external REST API must remain stable and independent from internal module evolution. To achieve this:
+
+**Problem:** Using module contract objects directly in REST controllers creates tight coupling between the external API surface and internal module structure. Changes to contract property names or structure immediately break external clients and violate backward compatibility.
+
+**Solution:** Implement separate API DTOs that act as a translation layer between the external API and internal contracts.
+
+#### Implementation Pattern
+
+```csharp
+// API-specific DTOs (in controller file or dedicated namespace)
+public sealed record CreateToDoListApiRequest(string UserId, string Title);
+public sealed record CreateToDoListApiResponse(string Id, string UserId, string Title, DateTime CreatedAt);
+
+[HttpPost]
+public async Task<IActionResult> CreateToDoList([FromBody] CreateToDoListApiRequest request)
+{
+    CreateToDoListCommand command = ToCommand(request);
+    Result<CreateToDoListResult> result = await _messageBus.InvokeAsync<Result<CreateToDoListResult>>(command);
+    
+    if (result.IsSuccess)
+    {
+        CreateToDoListApiResponse response = ToApiResponse(result.Value);
+        return CreatedAtAction(nameof(GetToDoList), new { id = response.Id }, response);
+    }
+    
+    return HandleError(result.Error);
+}
+
+private static CreateToDoListCommand ToCommand(CreateToDoListApiRequest request)
+{
+    return new CreateToDoListCommand(request.UserId, request.Title);
+}
+
+private static CreateToDoListApiResponse ToApiResponse(CreateToDoListResult createResult) 
+{
+    return new CreateToDoListApiResponse( 
+        createResult.ToDoListId.ToString(),
+        createResult.UserId.ToString(), 
+        createResult.Title,
+        createResult.CreatedAt);
+}
+```
+
+#### Implementation Guidelines
+
+- **Separate Mapping Methods:** Extract mapping logic into dedicated static methods (`ToCommand`, `ToApiResponse`) for clarity and reusability
+- **Consistent Naming:** Use consistent naming patterns for mapping methods across controllers
+- **Type Safety:** Maintain strong typing throughout the mapping process
+- **Error Handling:** Map internal error types to appropriate HTTP status codes and problem details
+
+#### Benefits
+
+- **API Stability:** External API remains stable when internal contracts evolve
+- **Independent Evolution:** API structure can be optimized for client needs without affecting internal design
+- **Backward Compatibility:** Breaking changes to internal contracts don't affect external clients
+- **Versioning Support:** Enables independent API versioning strategies
+- **Clear Separation:** Clean boundary between external interface and internal implementation
+- **Validation Flexibility:** Allows different validation rules for API vs internal contracts
+- **Maintainable Mapping:** Dedicated mapping methods keep controllers clean and mapping logic testable
+
+The small amount of mapping code required is justified by the significant architectural benefits of loose coupling and API stability.
 
 ## The Composition Root: `ApiHost`
 
