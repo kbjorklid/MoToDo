@@ -27,4 +27,12 @@ public class CreateToDoListCommandBuilder
     {
         return new CreateToDoListCommand(_userId, _title);
     }
+
+    /// <summary>
+    /// Builds an anonymous object that matches the API request structure.
+    /// </summary>
+    public object BuildApiRequest()
+    {
+        return new { UserId = _userId, Title = _title };
+    }
 }

@@ -1,9 +1,51 @@
+using Base.Contracts;
 using Base.Domain.Result;
 using Microsoft.AspNetCore.Mvc;
 using Users.Contracts;
 using Wolverine;
 
 namespace ApiHost.Controllers;
+
+// API DTOs - Request Models
+
+/// <summary>
+/// API request model for adding a new user to the system.
+/// </summary>
+/// <param name="Email">The user's email address.</param>
+/// <param name="UserName">The user's chosen username.</param>
+public sealed record AddUserApiRequest(string Email, string UserName);
+
+// API DTOs - Response Models
+
+/// <summary>
+/// API response model for adding a new user to the system.
+/// </summary>
+/// <param name="UserId">The unique identifier of the created user.</param>
+/// <param name="Email">The user's email address.</param>
+/// <param name="UserName">The user's username.</param>
+/// <param name="CreatedAt">The date and time when the user was created.</param>
+public sealed record AddUserApiResponse(string UserId, string Email, string UserName, DateTime CreatedAt);
+
+/// <summary>
+/// API response model for paginated users.
+/// </summary>
+/// <param name="Data">The list of user DTOs.</param>
+/// <param name="Pagination">Pagination information.</param>
+public sealed record GetUsersApiResponse(
+    IReadOnlyList<UserApiDto> Data,
+    PaginationApiInfo Pagination);
+
+/// <summary>
+/// API response model for user information.
+/// </summary>
+/// <param name="UserId">The unique identifier of the user.</param>
+/// <param name="Email">The user's email address.</param>
+/// <param name="UserName">The user's username.</param>
+/// <param name="CreatedAt">The date and time when the user was created.</param>
+/// <param name="LastLoginAt">The date and time when the user last logged in, if applicable.</param>
+public sealed record UserApiDto(string UserId, string Email, string UserName, DateTime CreatedAt, DateTime? LastLoginAt);
+
+// Note: PaginationApiInfo is defined in ToDoListsController and shared across controllers
 
 /// <summary>
 /// REST API controller for user management operations.
@@ -13,6 +55,45 @@ namespace ApiHost.Controllers;
 [Produces("application/json")]
 public class UsersController : ControllerBase
 {
+    // Mapping Methods - API DTOs to Contracts
+
+
+    // Mapping Methods - Contracts to API DTOs
+
+    private static AddUserApiResponse ToApiResponse(AddUserResult result)
+    {
+        return new AddUserApiResponse(
+            result.UserId.ToString(),
+            result.Email,
+            result.UserName,
+            result.CreatedAt);
+    }
+
+    private static GetUsersApiResponse ToApiResponse(GetUsersResult result)
+    {
+        return new GetUsersApiResponse(
+            result.Data.Select(ToApiDto).ToList(),
+            ToApiDto(result.Pagination));
+    }
+
+    private static UserApiDto ToApiDto(UserDto dto)
+    {
+        return new UserApiDto(
+            dto.UserId.ToString(),
+            dto.Email,
+            dto.UserName,
+            dto.CreatedAt,
+            dto.LastLoginAt);
+    }
+
+    private static PaginationApiInfo ToApiDto(PaginationInfo pagination)
+    {
+        return new PaginationApiInfo(
+            pagination.TotalItems,
+            pagination.TotalPages,
+            pagination.CurrentPage,
+            pagination.Limit);
+    }
     private readonly IMessageBus _messageBus;
 
     public UsersController(IMessageBus messageBus)
@@ -24,31 +105,31 @@ public class UsersController : ControllerBase
     /// Creates a new user in the system.
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(AddUserResult), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(AddUserApiResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> AddUser([FromBody] AddUserCommand command)
+    public async Task<IActionResult> AddUser([FromBody] AddUserApiRequest request)
     {
-
+        AddUserCommand command = new(request.Email, request.UserName);
         Result<AddUserResult> result = await _messageBus.InvokeAsync<Result<AddUserResult>>(command);
 
         if (result.IsSuccess)
         {
+            AddUserApiResponse response = ToApiResponse(result.Value);
             return CreatedAtAction(
                 nameof(GetUser),
-                new { userId = result.Value.UserId },
-                result.Value);
+                new { userId = response.UserId },
+                response);
         }
 
         return HandleError(result.Error);
-
     }
 
     /// <summary>
     /// Retrieves a paginated list of users with optional filtering and sorting.
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(GetUsersResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GetUsersApiResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetUsers(
@@ -58,12 +139,13 @@ public class UsersController : ControllerBase
         [FromQuery] string? email = null,
         [FromQuery] string? userName = null)
     {
-        var query = new GetUsersQuery(page, limit, sort, email, userName);
+        GetUsersQuery query = new(page, limit, sort, email, userName);
         Result<GetUsersResult> result = await _messageBus.InvokeAsync<Result<GetUsersResult>>(query);
 
         if (result.IsSuccess)
         {
-            return Ok(result.Value);
+            GetUsersApiResponse response = ToApiResponse(result.Value);
+            return Ok(response);
         }
 
         return HandleError(result.Error);
@@ -73,18 +155,19 @@ public class UsersController : ControllerBase
     /// Retrieves a user by their unique identifier.
     /// </summary>
     [HttpGet("{userId}")]
-    [ProducesResponseType(typeof(UserDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(UserApiDto), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetUser(string userId)
     {
-        var query = new GetUserByIdQuery(userId);
+        GetUserByIdQuery query = new(userId);
         Result<UserDto> result = await _messageBus.InvokeAsync<Result<UserDto>>(query);
 
         if (result.IsSuccess)
         {
-            return Ok(result.Value);
+            UserApiDto response = ToApiDto(result.Value);
+            return Ok(response);
         }
 
         return HandleError(result.Error);
@@ -100,7 +183,7 @@ public class UsersController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteUser(string userId)
     {
-        var command = new DeleteUserCommand(userId);
+        DeleteUserCommand command = new(userId);
         Result result = await _messageBus.InvokeAsync<Result>(command);
 
         if (result.IsSuccess)

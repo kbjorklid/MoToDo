@@ -289,10 +289,37 @@ private static CreateToDoListApiResponse ToApiResponse(CreateToDoListResult crea
 
 #### Implementation Guidelines
 
-- **Separate Mapping Methods:** Extract mapping logic into dedicated static methods (`ToCommand`, `ToApiResponse`) for clarity and reusability
+- **Separate Mapping Methods:** Extract mapping logic into dedicated static methods (`ToCommand`, `ToApiResponse`) **only when transformation is required**. Avoid creating methods that simply pass parameters through without any data transformation.
+- **Direct Construction:** When parameters map directly without transformation, construct objects inline rather than creating unnecessary wrapper methods
 - **Consistent Naming:** Use consistent naming patterns for mapping methods across controllers
 - **Type Safety:** Maintain strong typing throughout the mapping process
 - **Error Handling:** Map internal error types to appropriate HTTP status codes and problem details
+
+**When to use mapping methods:**
+```csharp
+// ✅ Good - Transforms data (Guid to string, property mapping)
+private static ToDoListSummaryApiDto ToApiDto(ToDoListSummaryDto dto)
+{
+    return new ToDoListSummaryApiDto(
+        dto.Id.ToString(),        // Transformation: Guid → string
+        dto.Title,
+        dto.TodoCount,
+        dto.CreatedAt,
+        dto.UpdatedAt);
+}
+```
+
+**When to avoid mapping methods:**
+```csharp
+// ❌ Redundant - No transformation, just parameter passing
+private static GetToDoListsQuery ToQuery(string userId, string? sort, int? page, int? limit)
+{
+    return new GetToDoListsQuery(userId, page, limit, sort);
+}
+
+// ✅ Better - Direct construction
+var query = new GetToDoListsQuery(userId, page, limit, sort);
+```
 
 #### Benefits
 

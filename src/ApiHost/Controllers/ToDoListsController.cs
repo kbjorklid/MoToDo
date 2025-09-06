@@ -1,3 +1,4 @@
+using Base.Contracts;
 using Base.Domain.Result;
 using Microsoft.AspNetCore.Mvc;
 using ToDoLists.Contracts;
@@ -5,24 +6,133 @@ using Wolverine;
 
 namespace ApiHost.Controllers;
 
-/// <summary>
-/// Request model for adding a new todo item to a list.
-/// </summary>
-/// <param name="Title">The title of the new todo item.</param>
-public sealed record AddToDoRequest(string Title);
+// API DTOs - Request Models
 
 /// <summary>
-/// Request model for updating a todo item.
+/// API request model for creating a new todo list.
+/// </summary>
+/// <param name="UserId">The unique identifier of the user who owns the list.</param>
+/// <param name="Title">The title of the todo list.</param>
+public sealed record CreateToDoListApiRequest(string UserId, string Title);
+
+/// <summary>
+/// API request model for adding a new todo item to a list.
+/// </summary>
+/// <param name="Title">The title of the new todo item.</param>
+public sealed record AddToDoApiRequest(string Title);
+
+/// <summary>
+/// API request model for updating a todo item.
 /// </summary>
 /// <param name="Title">The new title of the todo item (optional).</param>
 /// <param name="IsCompleted">The new completion status (optional).</param>
-public sealed record UpdateToDoRequest(string? Title, bool? IsCompleted);
+public sealed record UpdateToDoApiRequest(string? Title, bool? IsCompleted);
 
 /// <summary>
-/// Request model for updating todo list title.
+/// API request model for updating todo list title.
 /// </summary>
 /// <param name="Title">The new title for the todo list.</param>
-public sealed record UpdateToDoListTitleRequest(string Title);
+public sealed record UpdateToDoListTitleApiRequest(string Title);
+
+// API DTOs - Response Models
+
+/// <summary>
+/// API response model for creating a new todo list.
+/// </summary>
+/// <param name="Id">The unique identifier of the created todo list.</param>
+/// <param name="UserId">The unique identifier of the user who owns the list.</param>
+/// <param name="Title">The title of the todo list.</param>
+/// <param name="CreatedAt">The date and time when the todo list was created.</param>
+public sealed record CreateToDoListApiResponse(string Id, string UserId, string Title, DateTime CreatedAt);
+
+/// <summary>
+/// API response model for paginated todo lists.
+/// </summary>
+/// <param name="Data">The list of todo list summaries.</param>
+/// <param name="Pagination">Pagination information.</param>
+public sealed record GetToDoListsApiResponse(
+    IReadOnlyList<ToDoListSummaryApiDto> Data,
+    PaginationApiInfo Pagination);
+
+/// <summary>
+/// API response model for todo list summary information.
+/// </summary>
+/// <param name="Id">The unique identifier of the todo list.</param>
+/// <param name="Title">The title of the todo list.</param>
+/// <param name="TodoCount">Number of todos in the list.</param>
+/// <param name="CreatedAt">When the todo list was created.</param>
+/// <param name="UpdatedAt">When the todo list was last updated.</param>
+public sealed record ToDoListSummaryApiDto(
+    string Id,
+    string Title,
+    int TodoCount,
+    DateTime CreatedAt,
+    DateTime? UpdatedAt);
+
+/// <summary>
+/// API response model for detailed todo list information.
+/// </summary>
+/// <param name="Id">The unique identifier of the todo list.</param>
+/// <param name="Title">The title of the todo list.</param>
+/// <param name="Todos">Array of todos in the list.</param>
+/// <param name="TodoCount">Number of todos in the list.</param>
+/// <param name="CreatedAt">When the todo list was created.</param>
+/// <param name="UpdatedAt">When the todo list was last updated.</param>
+public sealed record ToDoListDetailApiResponse(
+    string Id,
+    string Title,
+    ToDoApiDto[] Todos,
+    int TodoCount,
+    DateTime CreatedAt,
+    DateTime? UpdatedAt);
+
+/// <summary>
+/// API response model for todo item information.
+/// </summary>
+/// <param name="Id">The unique identifier of the todo item.</param>
+/// <param name="Title">The title of the todo item.</param>
+/// <param name="IsCompleted">Whether the todo item is completed.</param>
+/// <param name="CreatedAt">When the todo item was created.</param>
+/// <param name="CompletedAt">When the todo item was completed, if applicable.</param>
+public sealed record ToDoApiDto(
+    string Id,
+    string Title,
+    bool IsCompleted,
+    DateTime CreatedAt,
+    DateTime? CompletedAt);
+
+/// <summary>
+/// API response model for adding a new todo item.
+/// </summary>
+/// <param name="Id">The unique identifier of the created todo item.</param>
+/// <param name="Title">The title of the todo item.</param>
+/// <param name="IsCompleted">Whether the todo item is completed.</param>
+/// <param name="CreatedAt">The date and time when the todo item was created.</param>
+/// <param name="CompletedAt">The date and time when the todo item was completed, if applicable.</param>
+public sealed record AddToDoApiResponse(string Id, string Title, bool IsCompleted, DateTime CreatedAt, DateTime? CompletedAt);
+
+/// <summary>
+/// API response model for updating a todo item.
+/// </summary>
+/// <param name="Id">The unique identifier of the updated todo item.</param>
+/// <param name="Title">The title of the todo item.</param>
+/// <param name="IsCompleted">Whether the todo item is completed.</param>
+/// <param name="CreatedAt">The date and time when the todo item was created.</param>
+/// <param name="CompletedAt">The date and time when the todo item was completed, if applicable.</param>
+public sealed record UpdateToDoApiResponse(string Id, string Title, bool IsCompleted, DateTime CreatedAt, DateTime? CompletedAt);
+
+/// <summary>
+/// API pagination information.
+/// </summary>
+/// <param name="TotalItems">Total number of items available.</param>
+/// <param name="TotalPages">Total number of pages available.</param>
+/// <param name="CurrentPage">Current page number.</param>
+/// <param name="Limit">Number of items per page.</param>
+public sealed record PaginationApiInfo(
+    int TotalItems,
+    int TotalPages,
+    int CurrentPage,
+    int Limit);
 
 /// <summary>
 /// REST API controller for todo list management operations.
@@ -32,6 +142,84 @@ public sealed record UpdateToDoListTitleRequest(string Title);
 [Produces("application/json")]
 public class ToDoListsController : ControllerBase
 {
+
+    // Mapping Methods - Contracts to API DTOs
+
+    private static CreateToDoListApiResponse ToApiResponse(CreateToDoListResult result)
+    {
+        return new CreateToDoListApiResponse(
+            result.ToDoListId.ToString(),
+            result.UserId.ToString(),
+            result.Title,
+            result.CreatedAt);
+    }
+
+    private static GetToDoListsApiResponse ToApiResponse(GetToDoListsResult result)
+    {
+        return new GetToDoListsApiResponse(
+            result.Data.Select(ToApiDto).ToList(),
+            ToApiDto(result.Pagination));
+    }
+
+    private static ToDoListSummaryApiDto ToApiDto(ToDoListSummaryDto dto)
+    {
+        return new ToDoListSummaryApiDto(
+            dto.Id.ToString(),
+            dto.Title,
+            dto.TodoCount,
+            dto.CreatedAt,
+            dto.UpdatedAt);
+    }
+
+    private static ToDoListDetailApiResponse ToApiResponse(ToDoListDetailDto dto)
+    {
+        return new ToDoListDetailApiResponse(
+            dto.Id.ToString(),
+            dto.Title,
+            dto.Todos.Select(ToApiDto).ToArray(),
+            dto.TodoCount,
+            dto.CreatedAt,
+            dto.UpdatedAt);
+    }
+
+    private static ToDoApiDto ToApiDto(ToDoDto dto)
+    {
+        return new ToDoApiDto(
+            dto.Id.ToString(),
+            dto.Title,
+            dto.IsCompleted,
+            dto.CreatedAt,
+            dto.CompletedAt);
+    }
+
+    private static AddToDoApiResponse ToApiResponse(AddToDoResult result)
+    {
+        return new AddToDoApiResponse(
+            result.Id.ToString(),
+            result.Title,
+            result.IsCompleted,
+            result.CreatedAt,
+            result.CompletedAt);
+    }
+
+    private static UpdateToDoApiResponse ToApiResponse(UpdateToDoResult result)
+    {
+        return new UpdateToDoApiResponse(
+            result.Id.ToString(),
+            result.Title,
+            result.IsCompleted,
+            result.CreatedAt,
+            result.CompletedAt);
+    }
+
+    private static PaginationApiInfo ToApiDto(PaginationInfo pagination)
+    {
+        return new PaginationApiInfo(
+            pagination.TotalItems,
+            pagination.TotalPages,
+            pagination.CurrentPage,
+            pagination.Limit);
+    }
     private readonly IMessageBus _messageBus;
 
     public ToDoListsController(IMessageBus messageBus)
@@ -43,7 +231,7 @@ public class ToDoListsController : ControllerBase
     /// Gets user's todo lists with optional pagination and sorting.
     /// </summary>
     [HttpGet]
-    [ProducesResponseType(typeof(GetToDoListsResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(GetToDoListsApiResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetToDoLists(
@@ -52,12 +240,13 @@ public class ToDoListsController : ControllerBase
         [FromQuery] int? page = null,
         [FromQuery] int? limit = null)
     {
-        var query = new GetToDoListsQuery(userId, page, limit, sort);
+        GetToDoListsQuery query = new(userId, page, limit, sort);
         Result<GetToDoListsResult> result = await _messageBus.InvokeAsync<Result<GetToDoListsResult>>(query);
 
         if (result.IsSuccess)
         {
-            return Ok(result.Value);
+            GetToDoListsApiResponse response = ToApiResponse(result.Value);
+            return Ok(response);
         }
 
         return HandleError(result.Error);
@@ -67,19 +256,21 @@ public class ToDoListsController : ControllerBase
     /// Creates a new todo list in the system.
     /// </summary>
     [HttpPost]
-    [ProducesResponseType(typeof(CreateToDoListResult), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(CreateToDoListApiResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> CreateToDoList([FromBody] CreateToDoListCommand command)
+    public async Task<IActionResult> CreateToDoList([FromBody] CreateToDoListApiRequest request)
     {
+        CreateToDoListCommand command = new(request.UserId, request.Title);
         Result<CreateToDoListResult> result = await _messageBus.InvokeAsync<Result<CreateToDoListResult>>(command);
 
         if (result.IsSuccess)
         {
+            CreateToDoListApiResponse response = ToApiResponse(result.Value);
             return CreatedAtAction(
                 nameof(GetToDoList),
-                new { id = result.Value.ToDoListId },
-                result.Value);
+                new { id = response.Id },
+                response);
         }
 
         return HandleError(result.Error);
@@ -89,19 +280,20 @@ public class ToDoListsController : ControllerBase
     /// Retrieves a todo list by its unique identifier.
     /// </summary>
     [HttpGet("{id}")]
-    [ProducesResponseType(typeof(ToDoListDetailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ToDoListDetailApiResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetToDoList(string id, [FromQuery] string userId)
     {
-        var query = new GetToDoListQuery(id, userId);
+        GetToDoListQuery query = new(id, userId);
         Result<ToDoListDetailDto> result = await _messageBus.InvokeAsync<Result<ToDoListDetailDto>>(query);
 
         if (result.IsSuccess)
         {
-            return Ok(result.Value);
+            ToDoListDetailApiResponse response = ToApiResponse(result.Value);
+            return Ok(response);
         }
 
         return HandleError(result.Error);
@@ -111,7 +303,7 @@ public class ToDoListsController : ControllerBase
     /// Updates the title of an existing todo list.
     /// </summary>
     [HttpPut("{id}")]
-    [ProducesResponseType(typeof(ToDoListDetailDto), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ToDoListDetailApiResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -119,20 +311,21 @@ public class ToDoListsController : ControllerBase
     public async Task<IActionResult> UpdateToDoListTitle(
         string id,
         [FromQuery] string userId,
-        [FromBody] UpdateToDoListTitleRequest request)
+        [FromBody] UpdateToDoListTitleApiRequest request)
     {
-        var command = new UpdateToDoListTitleCommand(id, userId, request.Title);
+        UpdateToDoListTitleCommand command = new(id, userId, request.Title);
         Result<UpdateToDoListTitleResult> result = await _messageBus.InvokeAsync<Result<UpdateToDoListTitleResult>>(command);
 
         if (result.IsSuccess)
         {
-            // Return the complete ToDoListDetailDto by fetching the updated list
-            var getQuery = new GetToDoListQuery(id, userId);
+            // Return the complete ToDoListDetailApiResponse by fetching the updated list
+            GetToDoListQuery getQuery = new(id, userId);
             Result<ToDoListDetailDto> detailResult = await _messageBus.InvokeAsync<Result<ToDoListDetailDto>>(getQuery);
 
             if (detailResult.IsSuccess)
             {
-                return Ok(detailResult.Value);
+                ToDoListDetailApiResponse response = ToApiResponse(detailResult.Value);
+                return Ok(response);
             }
 
             return HandleError(detailResult.Error);
@@ -145,21 +338,22 @@ public class ToDoListsController : ControllerBase
     /// Adds a new todo item to an existing todo list.
     /// </summary>
     [HttpPost("{listId}/todos")]
-    [ProducesResponseType(typeof(AddToDoResult), StatusCodes.Status201Created)]
+    [ProducesResponseType(typeof(AddToDoApiResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
-    public async Task<IActionResult> AddToDoToList(string listId, [FromBody] AddToDoRequest request)
+    public async Task<IActionResult> AddToDoToList(string listId, [FromBody] AddToDoApiRequest request)
     {
-        var command = new AddToDoCommand(listId, request.Title);
+        AddToDoCommand command = new(listId, request.Title);
         Result<AddToDoResult> result = await _messageBus.InvokeAsync<Result<AddToDoResult>>(command);
 
         if (result.IsSuccess)
         {
+            AddToDoApiResponse response = ToApiResponse(result.Value);
             return CreatedAtAction(
                 nameof(GetToDoList),
                 new { id = listId },
-                result.Value);
+                response);
         }
 
         return HandleError(result.Error);
@@ -169,7 +363,7 @@ public class ToDoListsController : ControllerBase
     /// Updates an existing todo item in a specific todo list.
     /// </summary>
     [HttpPut("{listId}/todos/{todoId}")]
-    [ProducesResponseType(typeof(UpdateToDoResult), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(UpdateToDoApiResponse), StatusCodes.Status200OK)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
@@ -178,14 +372,15 @@ public class ToDoListsController : ControllerBase
         string listId,
         string todoId,
         [FromQuery] string userId,
-        [FromBody] UpdateToDoRequest request)
+        [FromBody] UpdateToDoApiRequest request)
     {
-        var command = new UpdateToDoCommand(listId, todoId, userId, request.Title, request.IsCompleted);
+        UpdateToDoCommand command = new(listId, todoId, userId, request.Title, request.IsCompleted);
         Result<UpdateToDoResult> result = await _messageBus.InvokeAsync<Result<UpdateToDoResult>>(command);
 
         if (result.IsSuccess)
         {
-            return Ok(result.Value);
+            UpdateToDoApiResponse response = ToApiResponse(result.Value);
+            return Ok(response);
         }
 
         return HandleError(result.Error);

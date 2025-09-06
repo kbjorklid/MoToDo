@@ -28,7 +28,7 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        GetToDoListsResult result = await FromJsonAsync<GetToDoListsResult>(response);
+        GetToDoListsApiResponse result = await FromJsonAsync<GetToDoListsApiResponse>(response);
         Assert.Equal(2, result.Data.Count);
         Assert.Equal(2, result.Pagination.TotalItems);
         Assert.Equal(1, result.Pagination.TotalPages);
@@ -36,14 +36,14 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
         Assert.Equal(50, result.Pagination.Limit);
 
         // Verify todo lists are ordered by CreatedAt descending (newest first)
-        ToDoListSummaryDto firstList = result.Data[0];
-        ToDoListSummaryDto secondList = result.Data[1];
+        ToDoListSummaryApiDto firstList = result.Data[0];
+        ToDoListSummaryApiDto secondList = result.Data[1];
         Assert.True(firstList.CreatedAt >= secondList.CreatedAt);
 
         // Verify all properties are correctly populated
         Assert.All(result.Data, todoList =>
         {
-            Assert.NotEqual(Guid.Empty, todoList.Id);
+            Assert.NotEqual(Guid.Empty.ToString(), todoList.Id);
             Assert.NotEmpty(todoList.Title);
             Assert.Equal(0, todoList.TodoCount);
             Assert.Equal(FakeTimeProvider.GetUtcNow().UtcDateTime, todoList.CreatedAt);
@@ -63,7 +63,7 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        GetToDoListsResult result = await FromJsonAsync<GetToDoListsResult>(response);
+        GetToDoListsApiResponse result = await FromJsonAsync<GetToDoListsApiResponse>(response);
         Assert.Empty(result.Data);
         Assert.Equal(0, result.Pagination.TotalItems);
         Assert.Equal(0, result.Pagination.TotalPages);
@@ -87,7 +87,7 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        GetToDoListsResult result = await FromJsonAsync<GetToDoListsResult>(response);
+        GetToDoListsApiResponse result = await FromJsonAsync<GetToDoListsApiResponse>(response);
         Assert.Equal(2, result.Data.Count);
         Assert.Equal(5, result.Pagination.TotalItems);
         Assert.Equal(2, result.Pagination.TotalPages);
@@ -110,7 +110,7 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        GetToDoListsResult result = await FromJsonAsync<GetToDoListsResult>(response);
+        GetToDoListsApiResponse result = await FromJsonAsync<GetToDoListsApiResponse>(response);
         Assert.Equal(3, result.Data.Count);
 
         // Verify ascending order by title
@@ -134,7 +134,7 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        GetToDoListsResult result = await FromJsonAsync<GetToDoListsResult>(response);
+        GetToDoListsApiResponse result = await FromJsonAsync<GetToDoListsApiResponse>(response);
         Assert.Equal(3, result.Data.Count);
 
         // Verify descending order by title
@@ -164,7 +164,7 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        GetToDoListsResult result = await FromJsonAsync<GetToDoListsResult>(response);
+        GetToDoListsApiResponse result = await FromJsonAsync<GetToDoListsApiResponse>(response);
         Assert.Equal(3, result.Data.Count);
 
         // Verify ascending order by creation date (oldest first)
@@ -194,7 +194,7 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        GetToDoListsResult result = await FromJsonAsync<GetToDoListsResult>(response);
+        GetToDoListsApiResponse result = await FromJsonAsync<GetToDoListsApiResponse>(response);
         Assert.Equal(3, result.Data.Count);
 
         // Verify descending order by creation date (newest first) - this is also the default
@@ -255,7 +255,7 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        GetToDoListsResult result = await FromJsonAsync<GetToDoListsResult>(response);
+        GetToDoListsApiResponse result = await FromJsonAsync<GetToDoListsApiResponse>(response);
         Assert.Empty(result.Data);
         Assert.Equal(0, result.Pagination.TotalItems);
     }
@@ -312,7 +312,7 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        GetToDoListsResult result = await FromJsonAsync<GetToDoListsResult>(response);
+        GetToDoListsApiResponse result = await FromJsonAsync<GetToDoListsApiResponse>(response);
         Assert.Empty(result.Data);
         Assert.Equal(1, result.Pagination.TotalItems);
         Assert.Equal(1, result.Pagination.TotalPages);
@@ -337,7 +337,7 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        GetToDoListsResult result = await FromJsonAsync<GetToDoListsResult>(response);
+        GetToDoListsApiResponse result = await FromJsonAsync<GetToDoListsApiResponse>(response);
         Assert.Equal(2, result.Data.Count);
         Assert.All(result.Data, list => Assert.Contains("User1", list.Title));
     }
@@ -355,7 +355,7 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        GetToDoListsResult result = await FromJsonAsync<GetToDoListsResult>(response);
+        GetToDoListsApiResponse result = await FromJsonAsync<GetToDoListsApiResponse>(response);
         Assert.Equal(1, result.Pagination.CurrentPage);
         Assert.Equal(50, result.Pagination.Limit); // Default limit
     }

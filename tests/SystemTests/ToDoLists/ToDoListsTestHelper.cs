@@ -6,6 +6,16 @@ using ToDoLists.Contracts;
 
 namespace SystemTests.ToDoLists;
 
+// API response DTOs for system tests
+public sealed record CreateToDoListApiResponse(string Id, string UserId, string Title, DateTime CreatedAt);
+public sealed record AddToDoApiResponse(string Id, string Title, bool IsCompleted, DateTime CreatedAt, DateTime? CompletedAt);
+public sealed record UpdateToDoApiResponse(string Id, string Title, bool IsCompleted, DateTime CreatedAt, DateTime? CompletedAt);
+public sealed record GetToDoListsApiResponse(IReadOnlyList<ToDoListSummaryApiDto> Data, PaginationApiInfo Pagination);
+public sealed record ToDoListSummaryApiDto(string Id, string Title, int TodoCount, DateTime CreatedAt, DateTime? UpdatedAt);
+public sealed record ToDoListDetailApiResponse(string Id, string Title, ToDoApiDto[] Todos, int TodoCount, DateTime CreatedAt, DateTime? UpdatedAt);
+public sealed record ToDoApiDto(string Id, string Title, bool IsCompleted, DateTime CreatedAt, DateTime? CompletedAt);
+public sealed record PaginationApiInfo(int TotalItems, int TotalPages, int CurrentPage, int Limit);
+
 /// <summary>
 /// Helper methods for ToDoLists system tests.
 /// </summary>
@@ -16,13 +26,20 @@ public static class ToDoListsTestHelper
     /// </summary>
     public static async Task<CreateToDoListResult> CreateToDoListAsync(HttpClient httpClient)
     {
-        CreateToDoListCommand command = new CreateToDoListCommandBuilder().Build();
-        HttpResponseMessage response = await httpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(command));
+        object request = new CreateToDoListCommandBuilder().BuildApiRequest();
+        HttpResponseMessage response = await httpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(request));
 
         if (response.StatusCode != HttpStatusCode.Created)
             throw new InvalidOperationException($"Failed to create todo list. Status: {response.StatusCode}");
 
-        return await FromJsonAsync<CreateToDoListResult>(response);
+        CreateToDoListApiResponse apiResponse = await FromJsonAsync<CreateToDoListApiResponse>(response);
+
+        // Convert API response back to contract result for backward compatibility
+        return new CreateToDoListResult(
+            Guid.Parse(apiResponse.Id),
+            Guid.Parse(apiResponse.UserId),
+            apiResponse.Title,
+            apiResponse.CreatedAt);
     }
 
     /// <summary>
@@ -30,15 +47,22 @@ public static class ToDoListsTestHelper
     /// </summary>
     public static async Task<CreateToDoListResult> CreateToDoListAsync(HttpClient httpClient, string title)
     {
-        CreateToDoListCommand command = new CreateToDoListCommandBuilder()
+        object request = new CreateToDoListCommandBuilder()
             .WithTitle(title)
-            .Build();
-        HttpResponseMessage response = await httpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(command));
+            .BuildApiRequest();
+        HttpResponseMessage response = await httpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(request));
 
         if (response.StatusCode != HttpStatusCode.Created)
             throw new InvalidOperationException($"Failed to create todo list. Status: {response.StatusCode}");
 
-        return await FromJsonAsync<CreateToDoListResult>(response);
+        CreateToDoListApiResponse apiResponse = await FromJsonAsync<CreateToDoListApiResponse>(response);
+
+        // Convert API response back to contract result for backward compatibility
+        return new CreateToDoListResult(
+            Guid.Parse(apiResponse.Id),
+            Guid.Parse(apiResponse.UserId),
+            apiResponse.Title,
+            apiResponse.CreatedAt);
     }
 
     /// <summary>
@@ -46,16 +70,23 @@ public static class ToDoListsTestHelper
     /// </summary>
     public static async Task<CreateToDoListResult> CreateToDoListAsync(HttpClient httpClient, Guid userId, string title)
     {
-        CreateToDoListCommand command = new CreateToDoListCommandBuilder()
+        object request = new CreateToDoListCommandBuilder()
             .WithUserId(userId.ToString())
             .WithTitle(title)
-            .Build();
-        HttpResponseMessage response = await httpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(command));
+            .BuildApiRequest();
+        HttpResponseMessage response = await httpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(request));
 
         if (response.StatusCode != HttpStatusCode.Created)
             throw new InvalidOperationException($"Failed to create todo list. Status: {response.StatusCode}");
 
-        return await FromJsonAsync<CreateToDoListResult>(response);
+        CreateToDoListApiResponse apiResponse = await FromJsonAsync<CreateToDoListApiResponse>(response);
+
+        // Convert API response back to contract result for backward compatibility
+        return new CreateToDoListResult(
+            Guid.Parse(apiResponse.Id),
+            Guid.Parse(apiResponse.UserId),
+            apiResponse.Title,
+            apiResponse.CreatedAt);
     }
 
     /// <summary>
@@ -63,15 +94,22 @@ public static class ToDoListsTestHelper
     /// </summary>
     public static async Task<CreateToDoListResult> CreateToDoListAsync(HttpClient httpClient, Guid userId)
     {
-        CreateToDoListCommand command = new CreateToDoListCommandBuilder()
+        object request = new CreateToDoListCommandBuilder()
             .WithUserId(userId.ToString())
-            .Build();
-        HttpResponseMessage response = await httpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(command));
+            .BuildApiRequest();
+        HttpResponseMessage response = await httpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(request));
 
         if (response.StatusCode != HttpStatusCode.Created)
             throw new InvalidOperationException($"Failed to create todo list. Status: {response.StatusCode}");
 
-        return await FromJsonAsync<CreateToDoListResult>(response);
+        CreateToDoListApiResponse apiResponse = await FromJsonAsync<CreateToDoListApiResponse>(response);
+
+        // Convert API response back to contract result for backward compatibility
+        return new CreateToDoListResult(
+            Guid.Parse(apiResponse.Id),
+            Guid.Parse(apiResponse.UserId),
+            apiResponse.Title,
+            apiResponse.CreatedAt);
     }
 
     /// <summary>
@@ -97,7 +135,15 @@ public static class ToDoListsTestHelper
         if (response.StatusCode != HttpStatusCode.Created)
             throw new InvalidOperationException($"Failed to add todo. Status: {response.StatusCode}");
 
-        return await FromJsonAsync<AddToDoResult>(response);
+        AddToDoApiResponse apiResponse = await FromJsonAsync<AddToDoApiResponse>(response);
+
+        // Convert API response back to contract result for backward compatibility
+        return new AddToDoResult(
+            Guid.Parse(apiResponse.Id),
+            apiResponse.Title,
+            apiResponse.IsCompleted,
+            apiResponse.CreatedAt,
+            apiResponse.CompletedAt);
     }
 
     /// <summary>
@@ -111,7 +157,15 @@ public static class ToDoListsTestHelper
         if (response.StatusCode != HttpStatusCode.Created)
             throw new InvalidOperationException($"Failed to add todo. Status: {response.StatusCode}");
 
-        return await FromJsonAsync<AddToDoResult>(response);
+        AddToDoApiResponse apiResponse = await FromJsonAsync<AddToDoApiResponse>(response);
+
+        // Convert API response back to contract result for backward compatibility
+        return new AddToDoResult(
+            Guid.Parse(apiResponse.Id),
+            apiResponse.Title,
+            apiResponse.IsCompleted,
+            apiResponse.CreatedAt,
+            apiResponse.CompletedAt);
     }
 
     /// <summary>

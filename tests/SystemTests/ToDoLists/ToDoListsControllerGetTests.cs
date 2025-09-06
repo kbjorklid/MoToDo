@@ -28,8 +28,8 @@ public class ToDoListsControllerGetTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        ToDoListDetailDto result = await FromJsonAsync<ToDoListDetailDto>(response);
-        Assert.Equal(createdList.ToDoListId, result.Id);
+        ToDoListDetailApiResponse result = await FromJsonAsync<ToDoListDetailApiResponse>(response);
+        Assert.Equal(createdList.ToDoListId.ToString(), result.Id);
         Assert.Equal("My Shopping List", result.Title);
         Assert.Empty(result.Todos);
         Assert.Equal(0, result.TodoCount);
@@ -58,7 +58,7 @@ public class ToDoListsControllerGetTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        ToDoListDetailDto result = await FromJsonAsync<ToDoListDetailDto>(response);
+        ToDoListDetailApiResponse result = await FromJsonAsync<ToDoListDetailApiResponse>(response);
         Assert.Equal(2, result.TodoCount);
         Assert.Equal(2, result.Todos.Length);
 
@@ -69,7 +69,7 @@ public class ToDoListsControllerGetTests : BaseSystemTest
         // Verify all todos have valid creation timestamps
         Assert.All(result.Todos, todo =>
         {
-            Assert.NotEqual(Guid.Empty, todo.Id);
+            Assert.NotEqual(Guid.Empty.ToString(), todo.Id);
             Assert.Equal(FakeTimeProvider.GetUtcNow().UtcDateTime, todo.CreatedAt);
             Assert.Null(todo.CompletedAt);
         });
@@ -89,7 +89,7 @@ public class ToDoListsControllerGetTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
 
-        ToDoListDetailDto result = await FromJsonAsync<ToDoListDetailDto>(response);
+        ToDoListDetailApiResponse result = await FromJsonAsync<ToDoListDetailApiResponse>(response);
         Assert.Empty(result.Todos);
         Assert.Equal(0, result.TodoCount);
     }

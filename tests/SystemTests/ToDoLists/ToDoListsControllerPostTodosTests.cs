@@ -30,8 +30,8 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        AddToDoResult result = await FromJsonAsync<AddToDoResult>(response);
-        Assert.NotEqual(Guid.Empty, result.Id);
+        AddToDoApiResponse result = await FromJsonAsync<AddToDoApiResponse>(response);
+        Assert.NotEqual(Guid.Empty.ToString(), result.Id);
         Assert.Equal("Buy groceries", result.Title);
         Assert.False(result.IsCompleted);
         Assert.Equal(FakeTimeProvider.GetUtcNow().UtcDateTime, result.CreatedAt);
@@ -154,7 +154,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        AddToDoResult result = await FromJsonAsync<AddToDoResult>(response);
+        AddToDoApiResponse result = await FromJsonAsync<AddToDoApiResponse>(response);
         Assert.Equal(maxTitle, result.Title);
     }
 
@@ -173,7 +173,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        AddToDoResult result = await FromJsonAsync<AddToDoResult>(response);
+        AddToDoApiResponse result = await FromJsonAsync<AddToDoApiResponse>(response);
         Assert.Equal("a", result.Title);
     }
 
@@ -289,7 +289,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        AddToDoResult result = await FromJsonAsync<AddToDoResult>(response);
+        AddToDoApiResponse result = await FromJsonAsync<AddToDoApiResponse>(response);
         Assert.Equal("Buy groceries", result.Title);
     }
 
@@ -308,7 +308,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        AddToDoResult result = await FromJsonAsync<AddToDoResult>(response);
+        AddToDoApiResponse result = await FromJsonAsync<AddToDoApiResponse>(response);
         Assert.Equal("Buy groceries! @#$%^&*()_+-={}[]|\\:;\"'<>?,./", result.Title);
     }
 
@@ -327,7 +327,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        AddToDoResult result = await FromJsonAsync<AddToDoResult>(response);
+        AddToDoApiResponse result = await FromJsonAsync<AddToDoApiResponse>(response);
         Assert.Equal("買い物 🛒 épicerie مشتريات", result.Title);
     }
 
@@ -346,7 +346,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-        AddToDoResult result = await FromJsonAsync<AddToDoResult>(response);
+        AddToDoApiResponse result = await FromJsonAsync<AddToDoApiResponse>(response);
         Assert.Equal("Buy:\n- Milk\n- Bread\n- Eggs", result.Title);
     }
 
@@ -401,9 +401,9 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
 
             Assert.Equal(HttpStatusCode.Created, response.StatusCode);
 
-            AddToDoResult result = await FromJsonAsync<AddToDoResult>(response);
+            AddToDoApiResponse result = await FromJsonAsync<AddToDoApiResponse>(response);
             Assert.Equal(todoTitles[i], result.Title);
-            Assert.NotEqual(Guid.Empty, result.Id);
+            Assert.NotEqual(Guid.Empty.ToString(), result.Id);
         }
     }
 
