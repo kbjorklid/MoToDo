@@ -24,6 +24,19 @@ argument-hint: Optional: describe the scope (if left undescribed, uncommitted ch
     - Replace Nested Conditional with Guard Clauses 
     - Replace Magic Number with Named Constant 
     - Introduce Explaining Variable
+
+### Iniline comments
+
+When you encoutner an inline comment that explains something about the code, such as this:
+```csharp
+// Validate user name
+```
+Check:
+- Is it redundant (is it clear from the code that user verification is done)
+- If not redundant, can you extract a method, to make it redundant? For example:
+  ```csharp
+  bool userNameValid = ValidateUserName(userName);
+  ```
     
 ## Your task
 
