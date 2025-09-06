@@ -333,6 +333,55 @@ var query = new GetToDoListsQuery(userId, page, limit, sort);
 
 The small amount of mapping code required is justified by the significant architectural benefits of loose coupling and API stability.
 
+#### API Structure Organization
+
+To maintain clean separation of concerns and improve code organization, API structures should be extracted from controller files into dedicated companion files following a consistent naming pattern.
+
+**Pattern:** For each `FooController.cs`, create a corresponding `FooApiStructures.cs` file containing all API DTOs specific to that controller.
+
+**File Organization:**
+```
+ApiHost/Controllers/
+├── UserController.cs            // Controller logic only
+├── UserApiStructures.cs         // User-specific API DTOs
+├── ToDoListController.cs        // Controller logic only  
+├── ToDoListApiStructures.cs     // ToDoList-specific API DTOs
+└── CommonApiStructures.cs       // Shared API DTOs (e.g., PaginationApiInfo)
+```
+
+**Implementation:**
+```csharp
+// UserApiStructures.cs - Pure API data structures
+namespace ApiHost.Controllers;
+
+public sealed record AddUserApiRequest(string Email, string UserName);
+public sealed record AddUserApiResponse(string UserId, string Email, string UserName, DateTime CreatedAt);
+public sealed record GetUsersApiResponse(IReadOnlyList<UserApiDto> Data, PaginationApiInfo Pagination);
+
+// UserController.cs - Pure orchestration logic
+namespace ApiHost.Controllers;
+
+[ApiController]
+[Route("api/v1/users")]
+public class UserController : ControllerBase
+{
+    [HttpPost]
+    public async Task<IActionResult> AddUser([FromBody] AddUserApiRequest request) 
+    {
+        // Controller focuses solely on HTTP orchestration
+    }
+}
+```
+
+**Benefits:**
+- **Single Responsibility:** Controllers contain only HTTP handling logic
+- **Reusability:** API structures can be referenced across multiple controllers
+- **Maintainability:** Changes to API models don't require editing controller files
+- **Organization:** Clear visual separation between data structures and behavior
+- **Shared Components:** Common structures are centralized in `CommonApiStructures.cs`
+
+This pattern supports the architectural principle that controllers should be "thin" and focused on their core responsibility of HTTP request orchestration.
+
 ## The Composition Root: `ApiHost`
 
 The `ApiHost` project is the only part of the system that is aware of all the modules' implementation details (`Application` layers). It has two critical responsibilities:
