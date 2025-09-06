@@ -1,6 +1,8 @@
 using Base.Domain.Result;
 using ToDoLists.Contracts;
 using ToDoLists.Domain;
+using Users.Contracts;
+using Wolverine;
 
 namespace ToDoLists.Application.Commands;
 
@@ -15,18 +17,26 @@ public static class CreateToDoListCommandHandler
     /// <param name="command">The create todo list command containing user ID and title.</param>
     /// <param name="toDoListRepository">The todo list repository.</param>
     /// <param name="timeProvider">Time provider</param>
+    /// <param name="messageBus">Message bus for inter-module communication</param>
     /// <param name="cancellationToken">Cancellation token to cancel the operation if needed.</param>
     /// <returns>A Result containing the CreateToDoListResult if successful, or an error if validation fails.</returns>
     public static async Task<Result<CreateToDoListResult>> Handle(
         CreateToDoListCommand command,
         IToDoListRepository toDoListRepository,
         TimeProvider timeProvider,
+        IMessageBus messageBus,
         CancellationToken cancellationToken)
     {
         // Validate and convert UserId
         Result<UserId> userIdResult = UserId.FromString(command.UserId);
         if (userIdResult.IsFailure)
             return userIdResult.Error;
+
+        // Check if user exists by querying the Users module
+        GetUserByIdQuery getUserQuery = new(command.UserId);
+        Result<UserDto> userResult = await messageBus.InvokeAsync<Result<UserDto>>(getUserQuery, cancellationToken);
+        if (userResult.IsFailure)
+            return userResult.Error;
 
         // Create the ToDoList
         DateTime now = timeProvider.GetUtcNow().UtcDateTime;

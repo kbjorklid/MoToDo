@@ -2,6 +2,7 @@ using System.Net;
 using System.Text;
 using System.Text.Json;
 using SystemTests.TestObjectBuilders;
+using SystemTests.Users;
 using ToDoLists.Contracts;
 
 namespace SystemTests.ToDoLists;
@@ -26,7 +27,10 @@ public static class ToDoListsTestHelper
     /// </summary>
     public static async Task<CreateToDoListResult> CreateToDoListAsync(HttpClient httpClient)
     {
-        object request = new CreateToDoListCommandBuilder().BuildApiRequest();
+        Guid userId = await UsersTestHelper.CreateUserAsync(httpClient);
+        object request = new CreateToDoListCommandBuilder()
+            .WithUserId(userId.ToString())
+            .BuildApiRequest();
         HttpResponseMessage response = await httpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(request));
 
         if (response.StatusCode != HttpStatusCode.Created)
@@ -47,7 +51,9 @@ public static class ToDoListsTestHelper
     /// </summary>
     public static async Task<CreateToDoListResult> CreateToDoListAsync(HttpClient httpClient, string title)
     {
+        Guid userId = await UsersTestHelper.CreateUserAsync(httpClient);
         object request = new CreateToDoListCommandBuilder()
+            .WithUserId(userId.ToString())
             .WithTitle(title)
             .BuildApiRequest();
         HttpResponseMessage response = await httpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(request));

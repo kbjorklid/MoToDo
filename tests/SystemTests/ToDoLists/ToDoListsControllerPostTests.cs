@@ -1,5 +1,6 @@
 using System.Net;
 using System.Text;
+using SystemTests.Users;
 
 namespace SystemTests.ToDoLists;
 
@@ -17,8 +18,8 @@ public class ToDoListsControllerPostTests : BaseSystemTest
     public async Task PostToDoLists_WithValidData_ReturnsCreatedWithToDoListId()
     {
         // Arrange
-        string userId = Guid.NewGuid().ToString();
-        object request = new { UserId = userId, Title = "My Shopping List" };
+        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        object request = new { UserId = userId.ToString(), Title = "My Shopping List" };
 
         // Act
         HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(request));
@@ -28,7 +29,7 @@ public class ToDoListsControllerPostTests : BaseSystemTest
 
         CreateToDoListApiResponse apiResult = await FromJsonAsync<CreateToDoListApiResponse>(response);
         Assert.NotEqual(Guid.Empty.ToString(), apiResult.Id);
-        Assert.Equal(userId, apiResult.UserId);
+        Assert.Equal(userId.ToString(), apiResult.UserId);
         Assert.Equal("My Shopping List", apiResult.Title);
         Assert.Equal(FakeTimeProvider.GetUtcNow().UtcDateTime, apiResult.CreatedAt);
 
@@ -41,7 +42,8 @@ public class ToDoListsControllerPostTests : BaseSystemTest
     public async Task PostToDoLists_WithEmptyTitle_ReturnsBadRequest()
     {
         // Arrange
-        object request = new { UserId = Guid.NewGuid().ToString(), Title = "" };
+        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        object request = new { UserId = userId.ToString(), Title = "" };
 
         // Act
         HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(request));
@@ -54,7 +56,8 @@ public class ToDoListsControllerPostTests : BaseSystemTest
     public async Task PostToDoLists_WithWhitespaceOnlyTitle_ReturnsBadRequest()
     {
         // Arrange
-        object request = new { UserId = Guid.NewGuid().ToString(), Title = "   " };
+        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        object request = new { UserId = userId.ToString(), Title = "   " };
 
         // Act
         HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(request));
@@ -67,7 +70,8 @@ public class ToDoListsControllerPostTests : BaseSystemTest
     public async Task PostToDoLists_WithTabOnlyTitle_ReturnsBadRequest()
     {
         // Arrange
-        object request = new { UserId = Guid.NewGuid().ToString(), Title = "\t\t" };
+        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        object request = new { UserId = userId.ToString(), Title = "\t\t" };
 
         // Act
         HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(request));
@@ -106,7 +110,8 @@ public class ToDoListsControllerPostTests : BaseSystemTest
     public async Task PostToDoLists_WithNullTitle_ReturnsBadRequest()
     {
         // Arrange
-        string requestBody = $$$"""{"userId": "{{{Guid.NewGuid()}}}", "title": null}""";
+        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        string requestBody = $$$"""{"userId": "{{{userId}}}", "title": null}""";
         var content = new StringContent(requestBody, Encoding.UTF8, "application/json");
 
         // Act
@@ -134,8 +139,9 @@ public class ToDoListsControllerPostTests : BaseSystemTest
     public async Task PostToDoLists_WithVeryLongTitle_ReturnsBadRequest()
     {
         // Arrange - Create title with 201+ characters (exceeds 200 character limit)
+        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
         string longTitle = new string('a', 201);
-        object request = new { UserId = Guid.NewGuid().ToString(), Title = longTitle };
+        object request = new { UserId = userId.ToString(), Title = longTitle };
 
         // Act
         HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(request));
@@ -148,8 +154,9 @@ public class ToDoListsControllerPostTests : BaseSystemTest
     public async Task PostToDoLists_WithTitleExactly200Characters_ReturnsCreated()
     {
         // Arrange - Title at maximum boundary (200 characters)
+        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
         string maxTitle = new string('a', 200);
-        object request = new { UserId = Guid.NewGuid().ToString(), Title = maxTitle };
+        object request = new { UserId = userId.ToString(), Title = maxTitle };
 
         // Act
         HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(request));
@@ -218,7 +225,8 @@ public class ToDoListsControllerPostTests : BaseSystemTest
     public async Task PostToDoLists_WithWrongContentType_ReturnsUnsupportedMediaType()
     {
         // Arrange - Using XML content type instead of JSON
-        object request = new { UserId = Guid.NewGuid().ToString(), Title = "My Shopping List" };
+        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        object request = new { UserId = userId.ToString(), Title = "My Shopping List" };
         string json = System.Text.Json.JsonSerializer.Serialize(request, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase });
         var content = new StringContent(json, Encoding.UTF8, "application/xml");
 
@@ -304,7 +312,8 @@ public class ToDoListsControllerPostTests : BaseSystemTest
     public async Task PostToDoLists_WithTitleContainingSpecialCharacters_ReturnsCreated()
     {
         // Arrange - Title with special characters should be accepted
-        object request = new { UserId = Guid.NewGuid().ToString(), Title = "Shopping List! @#$%^&*()_+-={}[]|\\:;\"'<>?,./ " };
+        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        object request = new { UserId = userId.ToString(), Title = "Shopping List! @#$%^&*()_+-={}[]|\\:;\"'<>?,./ " };
 
         // Act
         HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(request));
@@ -317,12 +326,27 @@ public class ToDoListsControllerPostTests : BaseSystemTest
     public async Task PostToDoLists_WithTitleContainingUnicodeCharacters_ReturnsCreated()
     {
         // Arrange - Title with unicode characters should be accepted
-        object request = new { UserId = Guid.NewGuid().ToString(), Title = "Liste de courses 🛒 こんにちは مرحبا" };
+        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        object request = new { UserId = userId.ToString(), Title = "Liste de courses 🛒 こんにちは مرحبا" };
 
         // Act
         HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(request));
 
         // Assert
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
+    }
+
+    [Fact]
+    public async Task PostToDoLists_WithNonExistentUser_ReturnsNotFound()
+    {
+        // Arrange - Use a random GUID that doesn't exist in the system
+        string nonExistentUserId = Guid.NewGuid().ToString();
+        object request = new { UserId = nonExistentUserId, Title = "My Shopping List" };
+
+        // Act
+        HttpResponseMessage response = await HttpClient.PostAsync("/api/v1/todo-lists", ToJsonContent(request));
+
+        // Assert
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 }
