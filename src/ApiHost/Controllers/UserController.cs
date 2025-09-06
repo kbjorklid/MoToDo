@@ -14,45 +14,6 @@ namespace ApiHost.Controllers;
 [Produces("application/json")]
 public class UserController : ControllerBase
 {
-    // Mapping Methods - API DTOs to Contracts
-
-
-    // Mapping Methods - Contracts to API DTOs
-
-    private static AddUserApiResponse ToApiResponse(AddUserResult result)
-    {
-        return new AddUserApiResponse(
-            result.UserId.ToString(),
-            result.Email,
-            result.UserName,
-            result.CreatedAt);
-    }
-
-    private static GetUsersApiResponse ToApiResponse(GetUsersResult result)
-    {
-        return new GetUsersApiResponse(
-            result.Data.Select(ToApiDto).ToList(),
-            ToApiDto(result.Pagination));
-    }
-
-    private static UserApiDto ToApiDto(UserDto dto)
-    {
-        return new UserApiDto(
-            dto.UserId.ToString(),
-            dto.Email,
-            dto.UserName,
-            dto.CreatedAt,
-            dto.LastLoginAt);
-    }
-
-    private static PaginationApiInfo ToApiDto(PaginationInfo pagination)
-    {
-        return new PaginationApiInfo(
-            pagination.TotalItems,
-            pagination.TotalPages,
-            pagination.CurrentPage,
-            pagination.Limit);
-    }
     private readonly IMessageBus _messageBus;
 
     public UserController(IMessageBus messageBus)
@@ -190,5 +151,40 @@ public class UserController : ControllerBase
             ErrorType.Validation => StatusCodes.Status400BadRequest,
             _ => StatusCodes.Status500InternalServerError
         };
+    }
+
+    private static AddUserApiResponse ToApiResponse(AddUserResult result)
+    {
+        return new AddUserApiResponse(
+            result.UserId.ToString(),
+            result.Email,
+            result.UserName,
+            result.CreatedAt);
+    }
+
+    private static GetUsersApiResponse ToApiResponse(GetUsersResult result)
+    {
+        return new GetUsersApiResponse(
+            result.Data.Select(ToApiDto).ToList(),
+            ToApiDto(result.Pagination));
+    }
+
+    private static UserApiDto ToApiDto(UserDto dto)
+    {
+        return new UserApiDto(
+            dto.UserId.ToString(),
+            dto.Email,
+            dto.UserName,
+            dto.CreatedAt,
+            dto.LastLoginAt);
+    }
+
+    private static PaginationApiInfo ToApiDto(PaginationInfo pagination)
+    {
+        return new PaginationApiInfo(
+            pagination.TotalItems,
+            pagination.TotalPages,
+            pagination.CurrentPage,
+            pagination.Limit);
     }
 }

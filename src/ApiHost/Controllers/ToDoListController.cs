@@ -14,84 +14,6 @@ namespace ApiHost.Controllers;
 [Produces("application/json")]
 public class ToDoListController : ControllerBase
 {
-
-    // Mapping Methods - Contracts to API DTOs
-
-    private static CreateToDoListApiResponse ToApiResponse(CreateToDoListResult result)
-    {
-        return new CreateToDoListApiResponse(
-            result.ToDoListId.ToString(),
-            result.UserId.ToString(),
-            result.Title,
-            result.CreatedAt);
-    }
-
-    private static GetToDoListsApiResponse ToApiResponse(GetToDoListsResult result)
-    {
-        return new GetToDoListsApiResponse(
-            result.Data.Select(ToApiDto).ToList(),
-            ToApiDto(result.Pagination));
-    }
-
-    private static ToDoListSummaryApiDto ToApiDto(ToDoListSummaryDto dto)
-    {
-        return new ToDoListSummaryApiDto(
-            dto.Id.ToString(),
-            dto.Title,
-            dto.TodoCount,
-            dto.CreatedAt,
-            dto.UpdatedAt);
-    }
-
-    private static ToDoListDetailApiResponse ToApiResponse(ToDoListDetailDto dto)
-    {
-        return new ToDoListDetailApiResponse(
-            dto.Id.ToString(),
-            dto.Title,
-            dto.Todos.Select(ToApiDto).ToArray(),
-            dto.TodoCount,
-            dto.CreatedAt,
-            dto.UpdatedAt);
-    }
-
-    private static ToDoApiDto ToApiDto(ToDoDto dto)
-    {
-        return new ToDoApiDto(
-            dto.Id.ToString(),
-            dto.Title,
-            dto.IsCompleted,
-            dto.CreatedAt,
-            dto.CompletedAt);
-    }
-
-    private static AddToDoApiResponse ToApiResponse(AddToDoResult result)
-    {
-        return new AddToDoApiResponse(
-            result.Id.ToString(),
-            result.Title,
-            result.IsCompleted,
-            result.CreatedAt,
-            result.CompletedAt);
-    }
-
-    private static UpdateToDoApiResponse ToApiResponse(UpdateToDoResult result)
-    {
-        return new UpdateToDoApiResponse(
-            result.Id.ToString(),
-            result.Title,
-            result.IsCompleted,
-            result.CreatedAt,
-            result.CompletedAt);
-    }
-
-    private static PaginationApiInfo ToApiDto(PaginationInfo pagination)
-    {
-        return new PaginationApiInfo(
-            pagination.TotalItems,
-            pagination.TotalPages,
-            pagination.CurrentPage,
-            pagination.Limit);
-    }
     private readonly IMessageBus _messageBus;
 
     public ToDoListController(IMessageBus messageBus)
@@ -297,5 +219,81 @@ public class ToDoListController : ControllerBase
             ErrorType.Forbidden => StatusCodes.Status403Forbidden,
             _ => StatusCodes.Status500InternalServerError
         };
+    }
+
+    private static CreateToDoListApiResponse ToApiResponse(CreateToDoListResult result)
+    {
+        return new CreateToDoListApiResponse(
+            result.ToDoListId.ToString(),
+            result.UserId.ToString(),
+            result.Title,
+            result.CreatedAt);
+    }
+
+    private static GetToDoListsApiResponse ToApiResponse(GetToDoListsResult result)
+    {
+        return new GetToDoListsApiResponse(
+            result.Data.Select(ToApiDto).ToList(),
+            ToApiDto(result.Pagination));
+    }
+
+    private static ToDoListSummaryApiDto ToApiDto(ToDoListSummaryDto dto)
+    {
+        return new ToDoListSummaryApiDto(
+            dto.Id.ToString(),
+            dto.Title,
+            dto.TodoCount,
+            dto.CreatedAt,
+            dto.UpdatedAt);
+    }
+
+    private static ToDoListDetailApiResponse ToApiResponse(ToDoListDetailDto dto)
+    {
+        return new ToDoListDetailApiResponse(
+            dto.Id.ToString(),
+            dto.Title,
+            dto.Todos.Select(ToApiDto).ToArray(),
+            dto.TodoCount,
+            dto.CreatedAt,
+            dto.UpdatedAt);
+    }
+
+    private static ToDoApiDto ToApiDto(ToDoDto dto)
+    {
+        return new ToDoApiDto(
+            dto.Id.ToString(),
+            dto.Title,
+            dto.IsCompleted,
+            dto.CreatedAt,
+            dto.CompletedAt);
+    }
+
+    private static AddToDoApiResponse ToApiResponse(AddToDoResult result)
+    {
+        return new AddToDoApiResponse(
+            result.Id.ToString(),
+            result.Title,
+            result.IsCompleted,
+            result.CreatedAt,
+            result.CompletedAt);
+    }
+
+    private static UpdateToDoApiResponse ToApiResponse(UpdateToDoResult result)
+    {
+        return new UpdateToDoApiResponse(
+            result.Id.ToString(),
+            result.Title,
+            result.IsCompleted,
+            result.CreatedAt,
+            result.CompletedAt);
+    }
+
+    private static PaginationApiInfo ToApiDto(PaginationInfo pagination)
+    {
+        return new PaginationApiInfo(
+            pagination.TotalItems,
+            pagination.TotalPages,
+            pagination.CurrentPage,
+            pagination.Limit);
     }
 }
