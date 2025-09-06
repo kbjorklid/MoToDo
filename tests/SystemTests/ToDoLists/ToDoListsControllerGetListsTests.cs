@@ -287,22 +287,16 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
     }
 
     [Fact]
-    public async Task GetToDoLists_WithInvalidSortParameter_UsesDefaultSort()
+    public async Task GetToDoLists_WithInvalidSortParameter_ReturnsBadRequest()
     {
         // Arrange
         Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Test List");
 
         // Act - Using invalid sort parameter
         HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists?userId={userId}&sort=invalid-field");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        GetToDoListsResult result = await FromJsonAsync<GetToDoListsResult>(response);
-        Assert.Single(result.Data);
-        // Should default to sorting by CreatedAt descending
-        Assert.Equal("Test List", result.Data[0].Title);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]

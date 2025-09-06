@@ -63,7 +63,10 @@ public class SortParameterParser<TEnum> : ISortParameterParser<TEnum> where TEnu
         if (sortByResult is not null)
             return (sortByResult.Value, ascending);
 
-        return (_defaultSortBy, _defaultAscending);
+        return new Error(
+            $"{_errorCodePrefix}.UnsupportedField",
+            $"Unsupported sort field: '{sortField}'. Supported fields: {_supportedFieldsDescription}.",
+            ErrorType.Validation);
 
     }
 }

@@ -516,30 +516,19 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     }
 
     [Fact]
-    public async Task GetUsers_WithUnknownSortField_ReturnsUsersOrderedByCreatedAtAscending()
+    public async Task GetUsers_WithUnknownSortField_ReturnsBadRequest()
     {
-        // Arrange - Create users at different times using FakeTimeProvider for deterministic sorting
+        // Arrange
         await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user1@example.com")
             .WithUserName("user1")
-            .Build());
-        FakeTimeProvider.Advance(TimeSpan.FromMinutes(1));
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
-            .WithEmail("user2@example.com")
-            .WithUserName("user2")
             .Build());
 
         // Act
         HttpResponseMessage response = await HttpClient.GetAsync("/api/v1/users?sort=unknownfield");
 
         // Assert
-        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-
-        GetUsersResult result = await FromJsonAsync<GetUsersResult>(response);
-        Assert.Equal(2, result.Data.Count);
-
-        // Verify unknown field falls back to CreatedAt ascending
-        Assert.True(result.Data[0].CreatedAt <= result.Data[1].CreatedAt);
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
     }
 
     [Fact]
