@@ -27,17 +27,9 @@ public static class AddUserCommandHandler
 
         User user = userResult.Value;
 
-        User? existingEmailUser = await userRepository.GetByEmailAsync(user.Email);
-        if (existingEmailUser is not null)
-        {
-            return new Error(User.Codes.EmailAlreadyInUse, "A user with this email address already exists.", ErrorType.Validation);
-        }
-
-        User? existingUserNameUser = await userRepository.GetByUserNameAsync(user.UserName);
-        if (existingUserNameUser is not null)
-        {
-            return new Error(User.Codes.UserNameAlreadyInUse, "A user with this username already exists.", ErrorType.Validation);
-        }
+        Result uniquenessValidation = await ValidateUserUniqueness(userRepository, user);
+        if (uniquenessValidation.IsFailure)
+            return uniquenessValidation.Error;
 
         await userRepository.AddAsync(user);
         await userRepository.SaveChangesAsync();
@@ -48,5 +40,18 @@ public static class AddUserCommandHandler
             user.UserName.Value,
             user.CreatedAt
         );
+    }
+
+    private static async Task<Result> ValidateUserUniqueness(IUserRepository userRepository, User user)
+    {
+        User? existingEmailUser = await userRepository.GetByEmailAsync(user.Email);
+        if (existingEmailUser is not null)
+            return new Error(User.Codes.EmailAlreadyInUse, "A user with this email address already exists.", ErrorType.Validation);
+
+        User? existingUserNameUser = await userRepository.GetByUserNameAsync(user.UserName);
+        if (existingUserNameUser is not null)
+            return new Error(User.Codes.UserNameAlreadyInUse, "A user with this username already exists.", ErrorType.Validation);
+
+        return Result.Success();
     }
 }

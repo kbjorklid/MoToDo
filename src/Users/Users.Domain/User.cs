@@ -64,8 +64,9 @@ public sealed class User : AggregateRoot<UserId>
         if (emailResult.IsFailure)
             return emailResult.Error;
 
-        if (Email.Value.Address != emailResult.Value.Value.Address)
-            Email = emailResult.Value;
+        Email newEmail = emailResult.Value;
+        if (Email.Value.Address != newEmail.Value.Address)
+            Email = newEmail;
 
         return Result.Success();
     }
@@ -83,7 +84,6 @@ public sealed class User : AggregateRoot<UserId>
 
         if (UserName.Value != userNameResult.Value)
             UserName = userNameResult.Value;
-
 
         return Result.Success();
     }
