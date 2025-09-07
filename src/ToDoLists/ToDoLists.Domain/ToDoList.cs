@@ -205,6 +205,18 @@ public sealed class ToDoList : AggregateRoot<ToDoListId>
         return Result.Success();
     }
 
+    /// <summary>
+    /// Marks this todo list as deleted.
+    /// </summary>
+    /// <param name="deletedAt">The date and time when the todo list was deleted.</param>
+    /// <returns>A Result indicating success.</returns>
+    public Result MarkAsDeleted(DateTime deletedAt)
+    {
+        AddDomainEvent(new ToDoListDeletedEvent(Id, UserId, Title, deletedAt, deletedAt));
+
+        return Result.Success();
+    }
+
     private bool HasMaximumTodos() => _todos.Count >= MAX_TODOS;
 
     private bool HasDuplicateTitle(Title title) =>

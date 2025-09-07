@@ -12,13 +12,16 @@ public class UserDeletedIntegrationEventHandler
 {
     /// <summary>
     /// Handles the UserDeletedIntegrationEvent using Wolverine's preferred static method pattern.
+    /// Ensures domain events are published for each deleted todo list to maintain consistency.
     /// </summary>
     /// <param name="integrationEvent">The integration event containing the deleted user's ID.</param>
     /// <param name="toDoListRepository">The todo list repository.</param>
+    /// <param name="timeProvider">Time provider for consistent timestamps.</param>
     /// <param name="logger">Logger for tracking deletion operations.</param>
     public static async Task Handle(
         UserDeletedIntegrationEvent integrationEvent,
         IToDoListRepository toDoListRepository,
+        TimeProvider timeProvider,
         ILogger<UserDeletedIntegrationEventHandler> logger)
     {
         logger.LogInformation("Processing user deletion for user {UserId} - deleting associated todo lists", integrationEvent.UserId);
@@ -30,9 +33,24 @@ public class UserDeletedIntegrationEventHandler
             return;
         }
 
-        int deletedCount = await toDoListRepository.DeleteByUserIdAsync(userIdResult.Value);
+        IReadOnlyList<ToDoList> userToDoLists = await toDoListRepository.GetByUserIdAsync(userIdResult.Value);
+
+        if (userToDoLists.Count == 0)
+        {
+            logger.LogInformation("No todo lists found for user {UserId}", integrationEvent.UserId);
+            return;
+        }
+
+        DateTime deletedAt = timeProvider.GetUtcNow().UtcDateTime;
+
+        foreach (ToDoList toDoList in userToDoLists)
+        {
+            toDoList.MarkAsDeleted(deletedAt);
+            await toDoListRepository.DeleteAsync(toDoList.Id);
+        }
+
         await toDoListRepository.SaveChangesAsync();
 
-        logger.LogInformation("Successfully deleted {DeletedCount} todo lists for user {UserId}", deletedCount, integrationEvent.UserId);
+        logger.LogInformation("Successfully deleted {DeletedCount} todo lists for user {UserId}", userToDoLists.Count, integrationEvent.UserId);
     }
 }

@@ -584,6 +584,93 @@ private async Task PublishDomainEventsIfSuccessful(int changesSaved, List<IDomai
 
 This pattern ensures that domain events maintain consistency with database changes and are automatically handled without requiring explicit event publishing in command handlers.
 
+## State Modification Consistency Rules
+
+To maintain domain consistency and ensure reliable event publishing across all scenarios, all state modifications must follow these architectural rules:
+
+### The Golden Rule: All State Changes Through Domain Aggregates
+
+**Rule:** All state changes must go through domain aggregates to ensure domain events are published consistently. This applies to **all components** that modify data, not just command handlers.
+
+### Implementation Requirements
+
+1. **Load Domain Aggregates**: Always retrieve the full aggregate root from the repository
+2. **Execute Domain Methods**: Call appropriate business methods on the aggregate (which publish domain events)  
+3. **Persist Via Repository**: Save changes through repository interface to trigger event publishing
+
+### Correct Pattern
+
+```csharp
+// ✅ CORRECT: Integration event handler ensuring domain consistency
+public static async Task Handle(UserDeletedIntegrationEvent integrationEvent, ...)
+{
+    // 1. Load aggregates from repository
+    IReadOnlyList<ToDoList> userToDoLists = await repository.GetByUserIdAsync(userId);
+    
+    foreach (ToDoList toDoList in userToDoLists)
+    {
+        // 2. Execute domain method (publishes domain events)
+        toDoList.MarkAsDeleted(deletedAt);
+        
+        // 3. Persist via repository
+        await repository.DeleteAsync(toDoList.Id);
+    }
+    
+    await repository.SaveChangesAsync(); // Triggers event publishing
+}
+```
+
+### Incorrect Patterns
+
+```csharp
+// ❌ WRONG: Bypassing domain aggregates and events
+public static async Task Handle(UserDeletedIntegrationEvent integrationEvent, ...)
+{
+    // This bypasses domain events - creates inconsistent system state
+    int deletedCount = await repository.DeleteByUserIdAsync(userId);
+    await repository.SaveChangesAsync(); // No domain events published!
+}
+
+// ❌ WRONG: Direct database modifications
+public static async Task Handle(UserDeletedIntegrationEvent integrationEvent, ...)
+{
+    // This completely bypasses the domain model
+    await dbContext.ToDoLists.Where(tl => tl.UserId == userId).ExecuteDeleteAsync();
+}
+```
+
+### Why This Rule Matters
+
+**Problem:** Inconsistent event publishing creates data integrity issues:
+- Some deletions publish `ToDoListDeletedEvent`, others don't
+- Other modules miss cleanup opportunities for orphaned references
+- Audit trails become incomplete
+- Business rules that depend on events fail silently
+
+**Solution:** Enforcing consistency through domain aggregates ensures:
+- **Complete Event Coverage**: All state changes publish appropriate domain events
+- **Cross-Module Safety**: Other modules can reliably listen for events
+- **Audit Integrity**: Complete trail of all business operations
+- **Business Rule Consistency**: All domain invariants are enforced
+
+### Performance Considerations
+
+This rule may introduce performance overhead (N+1 queries vs. bulk operations), but this is the **correct architectural trade-off** for:
+- Data consistency across module boundaries
+- Complete audit trails
+- Reliable business rule enforcement
+- Maintainable domain model integrity
+
+### Components That Must Follow This Rule
+
+- **Command Handlers** (already follow this pattern)
+- **Integration Event Handlers** (must be updated to follow this pattern)
+- **Domain Services** (when they modify state)
+- **Background Jobs** (when they modify domain state)
+- **Migration Scripts** (when they need to trigger business rules)
+
+The only exception is infrastructure-level operations that explicitly need to bypass business rules (e.g., data seeding, administrative cleanup), which should be clearly documented as such.
+
 ## Converting Domain Events to Integration Events
 
 When domain events need to be communicated to other modules, they should be converted to integration events through dedicated handler classes in the Application layer.

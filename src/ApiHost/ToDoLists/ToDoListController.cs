@@ -112,17 +112,7 @@ public class ToDoListController : ControllerBase
 
         if (result.IsSuccess)
         {
-            // Return the complete ToDoListDetailApiResponse by fetching the updated list
-            GetToDoListQuery getQuery = new(id, userId);
-            Result<ToDoListDetailDto> detailResult = await _messageBus.InvokeAsync<Result<ToDoListDetailDto>>(getQuery);
-
-            if (detailResult.IsSuccess)
-            {
-                ToDoListDetailApiResponse response = ToApiResponse(detailResult.Value);
-                return Ok(response);
-            }
-
-            return HandleError(detailResult.Error);
+            return await GetUpdatedToDoListResponse(id, userId);
         }
 
         return HandleError(result.Error);
@@ -175,6 +165,28 @@ public class ToDoListController : ControllerBase
         {
             UpdateToDoApiResponse response = ToApiResponse(result.Value);
             return Ok(response);
+        }
+
+        return HandleError(result.Error);
+    }
+
+    /// <summary>
+    /// Deletes an existing todo list.
+    /// </summary>
+    [HttpDelete("{id}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> DeleteToDoList(string id, [FromQuery] string userId)
+    {
+        DeleteToDoListCommand command = new(id, userId);
+        Result<DeleteToDoListResult> result = await _messageBus.InvokeAsync<Result<DeleteToDoListResult>>(command);
+
+        if (result.IsSuccess)
+        {
+            return NoContent();
         }
 
         return HandleError(result.Error);
@@ -295,5 +307,19 @@ public class ToDoListController : ControllerBase
             pagination.TotalPages,
             pagination.CurrentPage,
             pagination.Limit);
+    }
+
+    private async Task<IActionResult> GetUpdatedToDoListResponse(string id, string userId)
+    {
+        GetToDoListQuery getQuery = new(id, userId);
+        Result<ToDoListDetailDto> detailResult = await _messageBus.InvokeAsync<Result<ToDoListDetailDto>>(getQuery);
+
+        if (detailResult.IsSuccess)
+        {
+            ToDoListDetailApiResponse response = ToApiResponse(detailResult.Value);
+            return Ok(response);
+        }
+
+        return HandleError(detailResult.Error);
     }
 }
