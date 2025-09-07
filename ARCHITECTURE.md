@@ -272,6 +272,47 @@ public async Task<IActionResult> CreateToDoList([FromBody] CreateToDoListApiRequ
     return HandleError(result.Error);
 }
 
+private IActionResult HandleError(Error error)
+{
+    // Transform internal Error objects to REST API error format
+    var errorResponse = new
+    {
+        errors = new[]
+        {
+            new
+            {
+                code = error.Code,
+                message = error.Description,
+                field = ExtractFieldFromError(error) // Optional: extract field info if available
+            }
+        }
+    };
+
+    return error.Type switch
+    {
+        ErrorType.Validation => BadRequest(errorResponse),
+        ErrorType.NotFound => NotFound(errorResponse),
+        ErrorType.Conflict => Conflict(errorResponse),
+        _ => StatusCode(500, errorResponse)
+    };
+}
+
+private static string? ExtractFieldFromError(Error error)
+{
+    // Extract field information from error code or description if following conventions
+    // e.g., "Email.InvalidFormat" → "email", "UserId.Empty" → "userId"
+    if (error.Code.Contains('.'))
+    {
+        var parts = error.Code.Split('.');
+        return parts[0].ToLowerFirst(); // Convert "Email" → "email", "UserId" → "userId"
+    }
+    return null;
+}
+
+private static string ToLowerFirst(this string str) =>
+    string.IsNullOrEmpty(str) ? str : char.ToLowerInvariant(str[0]) + str[1..];
+}
+
 private static CreateToDoListCommand ToCommand(CreateToDoListApiRequest request)
 {
     return new CreateToDoListCommand(request.UserId, request.Title);
@@ -319,6 +360,39 @@ private static GetToDoListsQuery ToQuery(string userId, string? sort, int? page,
 
 // ✅ Better - Direct construction
 var query = new GetToDoListsQuery(userId, page, limit, sort);
+```
+
+#### API DTO Mapping Decision Tree
+
+Use this decision framework to determine when to create mapping methods:
+
+```
+Does the mapping involve data transformation?
+├─ YES → Create mapping method
+│   ├─ Type conversions (Guid → string, DateTime → ISO string)
+│   ├─ Property name changes (internal → API naming)
+│   ├─ Structure changes (flattening, nesting)
+│   ├─ Format changes (enum → string, complex → simple)
+│   └─ Data enrichment/filtering
+│
+└─ NO → Use direct construction
+    ├─ Parameters map 1:1 without changes
+    ├─ Same types, same property names
+    ├─ No business logic in mapping
+    └─ Simple parameter passing
+
+Examples of transformations requiring mapping methods:
+✅ UserId.Value (Guid) → string
+✅ UserStatus.Active (enum) → "active" (string)  
+✅ Internal property names → API camelCase
+✅ Multiple internal objects → single API response
+✅ Complex validation result → simple error response
+
+Examples NOT requiring mapping methods:
+❌ string → string (same value)
+❌ int → int (same value)
+❌ Simple parameter reordering
+❌ Constructor calls with identical parameters
 ```
 
 #### Benefits
@@ -395,8 +469,8 @@ Each module provides `ServiceCollectionExtensions.cs` files in their Application
 
 ```csharp
 // Program.cs uses layer-specific extension methods
-builder.Services.AddUsersInfrastructureServices(connectionString);
-builder.Host.AddUsersApplicationServices();
+builder.Services.AddModuleAInfrastructureServices(connectionString);
+builder.Host.AddModuleAApplicationServices();
 ```
 
 # Database

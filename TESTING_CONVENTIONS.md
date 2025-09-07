@@ -126,11 +126,11 @@ tests/SystemTests/
 ```text
 tests/SystemTests/
 └── Users/
-    ├── UsersTestHelper.cs                 # Shared CreateUserAsync, etc.
-    ├── UsersControllerPostTests.cs        # All POST /users tests
-    ├── UsersControllerGetUserTests.cs     # GET /users/{id} tests  
-    ├── UsersControllerGetUsersTests.cs    # GET /users (list) tests
-    └── UsersControllerDeleteTests.cs      # DELETE /users/{id} tests
+    ├── UsersTestHelper.cs                 # Helper uses plural module name
+    ├── UserControllerPostTests.cs         # Controller uses singular class name
+    ├── UserControllerGetUserTests.cs      # Controller uses singular class name
+    ├── UserControllerGetUsersTests.cs     # Controller uses singular class name
+    └── UserControllerDeleteTests.cs       # Controller uses singular class name
 ```
 
 ### Splitting Guidelines
@@ -146,9 +146,9 @@ tests/SystemTests/
 
 #### ✅ Helper Class Guidelines
 - **Static class**: No state, only utility methods
-- **Module-specific**: One helper per module (UsersTestHelper, ProjectsTestHelper, etc.)
+- **Module-specific**: One helper per module (UserTestHelper, ProjectTestHelper, etc.)
 - **Location**: Place in module folder alongside test files
-- **Naming**: `{ModuleName}TestHelper.cs`
+- **Naming**: `{ModuleName_Singular}TestHelper.cs`
 - **Purpose**: Common operations like creating test data via APIs
 
 #### ❌ What NOT to Put in Helper Classes

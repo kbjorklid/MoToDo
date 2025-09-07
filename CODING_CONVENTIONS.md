@@ -233,6 +233,19 @@ Multiple optional parameters (3+), complex validation, reusable across repositor
 
 # Naming Conventions
 
+## Module vs Class Naming
+
+- **Modules (directories and projects)** MUST use **plural** names (e.g., `Users`, `ToDoLists`)
+- **Classes** MUST use **singular** names (e.g., `UserController`, `UserRepository`, `ToDoListService`)
+
+**Examples:**
+- Module: `Users` directory with `Users.Domain.csproj`
+- Classes: `UserController`, `UserRepository`, `UserService`
+- Module: `ToDoLists` directory with `ToDoLists.Application.csproj`
+- Classes: `ToDoListController`, `ToDoListRepository`, `ToDoListService`
+
+## Class Naming Conventions
+
 - Interfaces MUST start with `I` prefix.
 - Controllers MUST end with `Controller` suffix.
 - Exceptions MUST end with `Exception` suffix.
@@ -250,9 +263,9 @@ Multiple optional parameters (3+), complex validation, reusable across repositor
 
 # Inheritance Conventions
 
-- Entities should inherit from the [Entity<TId>](./src/AICleanTemplate.SharedKernel/Entity.cs) abstract class.
-- Aggregate Roots should inherit from the [AggregateRoot<TId>](./src/AICleanTemplate.SharedKernel/AggregateRoot.cs) abstract class.
-- Domain Events MUST implement the [IDomainEvent](./src/AICleanTemplate.SharedKernel/IDomainEvent.cs) interface.
+- Entities should inherit from the [Entity<TId>](./src/BuildingBlocks/Base.Domain/Entity.cs) abstract class.
+- Aggregate Roots should inherit from the [AggregateRoot<TId>](./src/BuildingBlocks/Base.Domain/AggregateRoot.cs) abstract class.
+- Domain Events MUST implement the [IDomainEvent](./src/BuildingBlocks/Base.Domain/IDomainEvent.cs) interface.
 - Commands and Queries should be implemented as immutable `record` types.
 - Repository interfaces should be defined in the Domain layer and implemented in the Infrastructure layer.
 
