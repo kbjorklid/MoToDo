@@ -1,4 +1,4 @@
-namespace ApiHost.Controllers;
+namespace ApiHost;
 
 /// <summary>
 /// API pagination information.

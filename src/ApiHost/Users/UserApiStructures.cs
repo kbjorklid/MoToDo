@@ -1,4 +1,4 @@
-namespace ApiHost.Controllers;
+namespace ApiHost.Users;
 
 // API DTOs - Request Models
 

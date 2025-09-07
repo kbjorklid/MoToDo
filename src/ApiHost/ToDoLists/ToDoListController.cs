@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using ToDoLists.Contracts;
 using Wolverine;
 
-namespace ApiHost.Controllers;
+namespace ApiHost.ToDoLists;
 
 /// <summary>
 /// REST API controller for todo list management operations.

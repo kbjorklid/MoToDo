@@ -4,7 +4,7 @@ using Microsoft.AspNetCore.Mvc;
 using Users.Contracts;
 using Wolverine;
 
-namespace ApiHost.Controllers;
+namespace ApiHost.Users;
 
 /// <summary>
 /// REST API controller for user management operations.
