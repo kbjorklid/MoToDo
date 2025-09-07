@@ -14,9 +14,9 @@ namespace SystemTests.Users;
 /// <summary>
 /// System tests for Users DELETE endpoints.
 /// </summary>
-public class UsersControllerDeleteTests : BaseSystemTest
+public class UserControllerDeleteTests : BaseSystemTest
 {
-    public UsersControllerDeleteTests(DatabaseFixture databaseFixture) : base(databaseFixture)
+    public UserControllerDeleteTests(DatabaseFixture databaseFixture) : base(databaseFixture)
     {
     }
 
@@ -24,7 +24,7 @@ public class UsersControllerDeleteTests : BaseSystemTest
     public async Task DeleteUser_UserExists_ReturnsNoContent()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
 
         // Act
         HttpResponseMessage response = await HttpClient.DeleteAsync($"/api/v1/users/{userId}");
@@ -37,7 +37,7 @@ public class UsersControllerDeleteTests : BaseSystemTest
     public async Task DeleteUser_UserExists_RemovesUserFromDatabase()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
 
         // Act
         HttpResponseMessage response = await HttpClient.DeleteAsync($"/api/v1/users/{userId}");
@@ -56,7 +56,7 @@ public class UsersControllerDeleteTests : BaseSystemTest
     public async Task DeleteUser_UserExists_VerifyUserCannotBeRetrievedAfterDeletion()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
 
         // Act
         HttpResponseMessage deleteResponse = await HttpClient.DeleteAsync($"/api/v1/users/{userId}");
@@ -105,7 +105,7 @@ public class UsersControllerDeleteTests : BaseSystemTest
     {
         // Arrange
         AddUserCommand command = new AddUserCommandBuilder().Build();
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient, command);
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient, command);
 
         // Act
         HttpResponseMessage firstDeleteResponse = await HttpClient.DeleteAsync($"/api/v1/users/{userId}");
@@ -120,9 +120,9 @@ public class UsersControllerDeleteTests : BaseSystemTest
     public async Task DeleteUser_UserWithToDoLists_DeletesAllToDoLists()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult firstList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
-        CreateToDoListResult secondList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Work Tasks");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult firstList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        CreateToDoListResult secondList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Work Tasks");
 
         // Act
         HttpResponseMessage deleteResponse = await HttpClient.DeleteAsync($"/api/v1/users/{userId}");
@@ -158,7 +158,7 @@ public class UsersControllerDeleteTests : BaseSystemTest
     public async Task DeleteUser_UserWithNoToDoLists_DeletesUserSuccessfully()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
 
         // Act
         HttpResponseMessage deleteResponse = await HttpClient.DeleteAsync($"/api/v1/users/{userId}");
@@ -177,13 +177,13 @@ public class UsersControllerDeleteTests : BaseSystemTest
     public async Task DeleteUser_UserWithManyToDoLists_DeletesAllToDoLists()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
         var createdLists = new List<CreateToDoListResult>();
 
         // Create 5 todo lists for the user
         for (int i = 1; i <= 5; i++)
         {
-            CreateToDoListResult list = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, $"List {i}");
+            CreateToDoListResult list = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, $"List {i}");
             createdLists.Add(list);
         }
 

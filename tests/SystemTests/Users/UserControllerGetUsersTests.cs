@@ -7,9 +7,9 @@ namespace SystemTests.Users;
 /// <summary>
 /// System tests for Users GET users list endpoints with pagination.
 /// </summary>
-public class UsersControllerGetUsersTests : BaseSystemTest
+public class UserControllerGetUsersTests : BaseSystemTest
 {
-    public UsersControllerGetUsersTests(DatabaseFixture databaseFixture) : base(databaseFixture)
+    public UserControllerGetUsersTests(DatabaseFixture databaseFixture) : base(databaseFixture)
     {
     }
 
@@ -34,11 +34,11 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithExistingUsers_ReturnsOkWithUserList()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("john.doe@example.com")
             .WithUserName("johndoe")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("jane.smith@example.com")
             .WithUserName("janesmith")
             .Build());
@@ -69,7 +69,7 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_ReturnsCorrectResponseStructure()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient);
+        await UserTestHelper.CreateUserAsync(HttpClient);
 
         // Act
         HttpResponseMessage response = await HttpClient.GetAsync("/api/v1/users");
@@ -96,7 +96,7 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithDefaultPagination_ReturnsCorrectDefaults()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient);
+        await UserTestHelper.CreateUserAsync(HttpClient);
 
         // Act
         HttpResponseMessage response = await HttpClient.GetAsync("/api/v1/users");
@@ -113,9 +113,9 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithCustomPageAndLimit_ReturnsRequestedPagination()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient);
-        await UsersTestHelper.CreateUserAsync(HttpClient);
-        await UsersTestHelper.CreateUserAsync(HttpClient);
+        await UserTestHelper.CreateUserAsync(HttpClient);
+        await UserTestHelper.CreateUserAsync(HttpClient);
+        await UserTestHelper.CreateUserAsync(HttpClient);
 
         // Act
         HttpResponseMessage response = await HttpClient.GetAsync("/api/v1/users?page=1&limit=2");
@@ -135,9 +135,9 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithSecondPage_ReturnsCorrectPaginatedResults()
     {
         // Arrange - Create 3 users to test pagination
-        await UsersTestHelper.CreateUserAsync(HttpClient);
-        await UsersTestHelper.CreateUserAsync(HttpClient);
-        await UsersTestHelper.CreateUserAsync(HttpClient);
+        await UserTestHelper.CreateUserAsync(HttpClient);
+        await UserTestHelper.CreateUserAsync(HttpClient);
+        await UserTestHelper.CreateUserAsync(HttpClient);
 
         // Act
         HttpResponseMessage response = await HttpClient.GetAsync("/api/v1/users?page=2&limit=2");
@@ -157,7 +157,7 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithPageBeyondAvailableData_ReturnsEmptyResults()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient);
+        await UserTestHelper.CreateUserAsync(HttpClient);
 
         // Act
         HttpResponseMessage response = await HttpClient.GetAsync("/api/v1/users?page=5&limit=10");
@@ -227,7 +227,7 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithLimitExactly100_ReturnsOk()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient);
+        await UserTestHelper.CreateUserAsync(HttpClient);
 
         // Act
         HttpResponseMessage response = await HttpClient.GetAsync("/api/v1/users?limit=100");
@@ -245,12 +245,12 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithNoSortParameter_ReturnsUsersOrderedByCreatedAtAscending()
     {
         // Arrange - Create users at different times using FakeTimeProvider for deterministic sorting
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user1@example.com")
             .WithUserName("user1")
             .Build());
         FakeTimeProvider.Advance(TimeSpan.FromMinutes(1)); // Advance time by 1 minute
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user2@example.com")
             .WithUserName("user2")
             .Build());
@@ -272,15 +272,15 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithSortByUsernameAscending_ReturnsUsersSortedByUsernameAscending()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("charlie@example.com")
             .WithUserName("charlie")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("alice@example.com")
             .WithUserName("alice")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("bob@example.com")
             .WithUserName("bob")
             .Build());
@@ -304,15 +304,15 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithSortByUsernameDescending_ReturnsUsersSortedByUsernameDescending()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("alice@example.com")
             .WithUserName("alice")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("charlie@example.com")
             .WithUserName("charlie")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("bob@example.com")
             .WithUserName("bob")
             .Build());
@@ -336,15 +336,15 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithSortByEmailAscending_ReturnsUsersSortedByEmailAscending()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("charlie@example.com")
             .WithUserName("charlie")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("alice@example.com")
             .WithUserName("alice")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("bob@example.com")
             .WithUserName("bob")
             .Build());
@@ -368,15 +368,15 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithSortByEmailDescending_ReturnsUsersSortedByEmailDescending()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("alice@example.com")
             .WithUserName("alice")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("bob@example.com")
             .WithUserName("bob")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("charlie@example.com")
             .WithUserName("charlie")
             .Build());
@@ -400,17 +400,17 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithSortByCreatedAtAscending_ReturnsUsersSortedByCreatedAtAscending()
     {
         // Arrange - Create users at different times using FakeTimeProvider for deterministic sorting
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("first@example.com")
             .WithUserName("first")
             .Build());
         FakeTimeProvider.Advance(TimeSpan.FromMinutes(1));
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("second@example.com")
             .WithUserName("second")
             .Build());
         FakeTimeProvider.Advance(TimeSpan.FromMinutes(1));
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("third@example.com")
             .WithUserName("third")
             .Build());
@@ -433,17 +433,17 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithSortByCreatedAtDescending_ReturnsUsersSortedByCreatedAtDescending()
     {
         // Arrange - Create users at different times using FakeTimeProvider for deterministic sorting
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("oldest@example.com")
             .WithUserName("oldest")
             .Build());
         FakeTimeProvider.Advance(TimeSpan.FromMinutes(1));
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("middle@example.com")
             .WithUserName("middle")
             .Build());
         FakeTimeProvider.Advance(TimeSpan.FromMinutes(1));
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("newest@example.com")
             .WithUserName("newest")
             .Build());
@@ -466,11 +466,11 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithSortByCaseInsensitiveFieldName_ReturnsCorrectSorting()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("charlie@example.com")
             .WithUserName("charlie")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("alice@example.com")
             .WithUserName("alice")
             .Build());
@@ -493,11 +493,11 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithSortByMixedCaseFieldName_ReturnsCorrectSorting()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("charlie@example.com")
             .WithUserName("charlie")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("alice@example.com")
             .WithUserName("alice")
             .Build());
@@ -519,7 +519,7 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithUnknownSortField_ReturnsBadRequest()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user1@example.com")
             .WithUserName("user1")
             .Build());
@@ -535,19 +535,19 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithSortingAndPagination_ReturnsSortedPaginatedResults()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("charlie@example.com")
             .WithUserName("charlie")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("alice@example.com")
             .WithUserName("alice")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("diana@example.com")
             .WithUserName("diana")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("bob@example.com")
             .WithUserName("bob")
             .Build());
@@ -573,12 +573,12 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithEmptySort_ReturnsUsersOrderedByCreatedAtAscending()
     {
         // Arrange - Create users at different times using FakeTimeProvider for deterministic sorting
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user1@example.com")
             .WithUserName("user1")
             .Build());
         FakeTimeProvider.Advance(TimeSpan.FromMinutes(1));
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user2@example.com")
             .WithUserName("user2")
             .Build());
@@ -600,12 +600,12 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithWhitespaceSort_ReturnsUsersOrderedByCreatedAtAscending()
     {
         // Arrange - Create users at different times using FakeTimeProvider for deterministic sorting
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user1@example.com")
             .WithUserName("user1")
             .Build());
         FakeTimeProvider.Advance(TimeSpan.FromMinutes(1));
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user2@example.com")
             .WithUserName("user2")
             .Build());
@@ -627,15 +627,15 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithSortByLastLoginAtAscending_ReturnsUsersSortedByLastLoginAtAscending()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user1@example.com")
             .WithUserName("user1")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user2@example.com")
             .WithUserName("user2")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user3@example.com")
             .WithUserName("user3")
             .Build());
@@ -661,15 +661,15 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithSortByLastLoginAtDescending_ReturnsUsersSortedByLastLoginAtDescending()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user1@example.com")
             .WithUserName("user1")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user2@example.com")
             .WithUserName("user2")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user3@example.com")
             .WithUserName("user3")
             .Build());
@@ -697,15 +697,15 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithEmailFilter_ReturnsOnlyUsersMatchingEmailFilter()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("john.doe@company.com")
             .WithUserName("johndoe")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("jane.smith@company.com")
             .WithUserName("janesmith")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("bob.wilson@external.com")
             .WithUserName("bobwilson")
             .Build());
@@ -728,15 +728,15 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithUserNameFilter_ReturnsOnlyUsersMatchingUserNameFilter()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("admin1@example.com")
             .WithUserName("admin1")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("admin2@example.com")
             .WithUserName("admin2")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user1@example.com")
             .WithUserName("user1")
             .Build());
@@ -759,15 +759,15 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithEmailAndUserNameFilter_ReturnsUsersMatchingBothFilters()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("admin@company.com")
             .WithUserName("admin")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("admin@external.com")
             .WithUserName("admin")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user@company.com")
             .WithUserName("user")
             .Build());
@@ -792,11 +792,11 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithEmailFilterNoMatches_ReturnsEmptyResults()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("john@company.com")
             .WithUserName("john")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("jane@company.com")
             .WithUserName("jane")
             .Build());
@@ -817,11 +817,11 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithUserNameFilterNoMatches_ReturnsEmptyResults()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("john@company.com")
             .WithUserName("john")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("jane@company.com")
             .WithUserName("jane")
             .Build());
@@ -842,15 +842,15 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithPartialEmailFilter_ReturnsMatchingUsers()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("john.doe@gmail.com")
             .WithUserName("johndoe")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("john.smith@yahoo.com")
             .WithUserName("johnsmith")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("jane.doe@gmail.com")
             .WithUserName("janedoe")
             .Build());
@@ -873,15 +873,15 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithPartialUserNameFilter_ReturnsMatchingUsers()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user1@example.com")
             .WithUserName("developer1")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user2@example.com")
             .WithUserName("developer2")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user3@example.com")
             .WithUserName("manager1")
             .Build());
@@ -904,11 +904,11 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithEmptyEmailFilter_ReturnsAllUsers()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user1@example.com")
             .WithUserName("user1")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user2@example.com")
             .WithUserName("user2")
             .Build());
@@ -928,11 +928,11 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithEmptyUserNameFilter_ReturnsAllUsers()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user1@example.com")
             .WithUserName("user1")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user2@example.com")
             .WithUserName("user2")
             .Build());
@@ -952,11 +952,11 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithWhitespaceEmailFilter_ReturnsAllUsers()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user1@example.com")
             .WithUserName("user1")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user2@example.com")
             .WithUserName("user2")
             .Build());
@@ -976,11 +976,11 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithWhitespaceUserNameFilter_ReturnsAllUsers()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user1@example.com")
             .WithUserName("user1")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user2@example.com")
             .WithUserName("user2")
             .Build());
@@ -1000,15 +1000,15 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithFilteringAndSorting_ReturnsSortedFilteredResults()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("charlie@company.com")
             .WithUserName("charlie")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("alice@company.com")
             .WithUserName("alice")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("bob@external.com")
             .WithUserName("bob")
             .Build());
@@ -1033,19 +1033,19 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithFilteringAndPagination_ReturnsPaginatedFilteredResults()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user1@company.com")
             .WithUserName("user1")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user2@company.com")
             .WithUserName("user2")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("user3@company.com")
             .WithUserName("user3")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("external@external.com")
             .WithUserName("external")
             .Build());
@@ -1071,23 +1071,23 @@ public class UsersControllerGetUsersTests : BaseSystemTest
     public async Task GetUsers_WithFilteringSortingAndPagination_ReturnsCombinedResults()
     {
         // Arrange
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("delta@company.com")
             .WithUserName("delta")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("alpha@company.com")
             .WithUserName("alpha")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("charlie@company.com")
             .WithUserName("charlie")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("beta@company.com")
             .WithUserName("beta")
             .Build());
-        await UsersTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
+        await UserTestHelper.CreateUserAsync(HttpClient, new AddUserCommandBuilder()
             .WithEmail("external@external.com")
             .WithUserName("external")
             .Build());

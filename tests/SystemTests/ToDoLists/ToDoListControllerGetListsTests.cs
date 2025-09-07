@@ -7,9 +7,9 @@ namespace SystemTests.ToDoLists;
 /// <summary>
 /// System tests for the GET /todo-lists endpoint (list all todo lists for a user).
 /// </summary>
-public class ToDoListsControllerGetListsTests : BaseSystemTest
+public class ToDoListControllerGetListsTests : BaseSystemTest
 {
-    public ToDoListsControllerGetListsTests(DatabaseFixture databaseFixture) : base(databaseFixture)
+    public ToDoListControllerGetListsTests(DatabaseFixture databaseFixture) : base(databaseFixture)
     {
     }
 
@@ -18,9 +18,9 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
     public async Task GetToDoLists_WithValidUserId_ReturnsOkWithToDoListsSummaries()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        _ = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
-        CreateToDoListResult list2 = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Work Tasks");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        _ = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        CreateToDoListResult list2 = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Work Tasks");
 
         // Act
         HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists?userId={userId}");
@@ -55,7 +55,7 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
     public async Task GetToDoLists_WithEmptyUserToDoLists_ReturnsOkWithEmptyList()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
 
         // Act
         HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists?userId={userId}");
@@ -75,10 +75,10 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
     public async Task GetToDoLists_WithPaginationPage2Limit3_ReturnsPaginatedResults()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
         for (int i = 1; i <= 5; i++)
         {
-            await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, $"List {i}");
+            await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, $"List {i}");
         }
 
         // Act
@@ -99,10 +99,10 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
     public async Task GetToDoLists_WithSortByTitleAscending_ReturnsSortedResults()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Zebra Tasks");
-        await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Alpha Tasks");
-        await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Beta Tasks");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Zebra Tasks");
+        await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Alpha Tasks");
+        await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Beta Tasks");
 
         // Act
         HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists?userId={userId}&sort=title");
@@ -123,10 +123,10 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
     public async Task GetToDoLists_WithSortByTitleDescending_ReturnsSortedResults()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Alpha Tasks");
-        await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Zebra Tasks");
-        await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Beta Tasks");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Alpha Tasks");
+        await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Zebra Tasks");
+        await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Beta Tasks");
 
         // Act
         HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists?userId={userId}&sort=-title");
@@ -147,16 +147,16 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
     public async Task GetToDoLists_WithSortByCreatedAtAscending_ReturnsSortedResults()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
 
         // Create lists with time advancement to ensure different timestamps
-        _ = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "First List");
+        _ = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "First List");
         FakeTimeProvider.Advance(TimeSpan.FromMinutes(10));
 
-        _ = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Second List");
+        _ = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Second List");
         FakeTimeProvider.Advance(TimeSpan.FromMinutes(10));
 
-        _ = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Third List");
+        _ = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Third List");
 
         // Act
         HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists?userId={userId}&sort=createdat");
@@ -177,16 +177,16 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
     public async Task GetToDoLists_WithSortByCreatedAtDescending_ReturnsSortedResults()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
 
         // Create lists with time advancement to ensure different timestamps
-        _ = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "First List");
+        _ = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "First List");
         FakeTimeProvider.Advance(TimeSpan.FromMinutes(10));
 
-        _ = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Second List");
+        _ = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Second List");
         FakeTimeProvider.Advance(TimeSpan.FromMinutes(10));
 
-        _ = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Third List");
+        _ = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Third List");
 
         // Act
         HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists?userId={userId}&sort=-createdat");
@@ -264,7 +264,7 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
     public async Task GetToDoLists_WithInvalidPageNumber_ReturnsBadRequest()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
 
         // Act - Page 0 is invalid (pages start from 1)
         HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists?userId={userId}&page=0");
@@ -277,7 +277,7 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
     public async Task GetToDoLists_WithInvalidLimitNumber_ReturnsBadRequest()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
 
         // Act - Limit 0 is invalid
         HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists?userId={userId}&limit=0");
@@ -290,7 +290,7 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
     public async Task GetToDoLists_WithInvalidSortParameter_ReturnsBadRequest()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
 
         // Act - Using invalid sort parameter
         HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists?userId={userId}&sort=invalid-field");
@@ -303,8 +303,8 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
     public async Task GetToDoLists_WithPageBeyondAvailableData_ReturnsOkWithEmptyList()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Only List");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Only List");
 
         // Act - Request page 5 when only 1 item exists
         HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists?userId={userId}&page=5");
@@ -323,13 +323,13 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
     public async Task GetToDoLists_WithMultipleUsersData_ReturnsOnlyCurrentUserData()
     {
         // Arrange
-        Guid user1 = await UsersTestHelper.CreateUserAsync(HttpClient);
-        Guid user2 = await UsersTestHelper.CreateUserAsync(HttpClient);
+        Guid user1 = await UserTestHelper.CreateUserAsync(HttpClient);
+        Guid user2 = await UserTestHelper.CreateUserAsync(HttpClient);
 
         // Create todo lists for both users
-        await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, user1, "User1 List 1");
-        await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, user1, "User1 List 2");
-        await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, user2, "User2 List 1");
+        await ToDoListTestHelper.CreateToDoListAsync(HttpClient, user1, "User1 List 1");
+        await ToDoListTestHelper.CreateToDoListAsync(HttpClient, user1, "User1 List 2");
+        await ToDoListTestHelper.CreateToDoListAsync(HttpClient, user2, "User2 List 1");
 
         // Act - Request lists for user1 only
         HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists?userId={user1}");
@@ -346,8 +346,8 @@ public class ToDoListsControllerGetListsTests : BaseSystemTest
     public async Task GetToDoLists_WithDefaultPagination_UsesCorrectDefaults()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Test List");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Test List");
 
         // Act - No pagination parameters provided
         HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists?userId={userId}");

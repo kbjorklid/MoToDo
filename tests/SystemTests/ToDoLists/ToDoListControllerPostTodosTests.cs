@@ -8,9 +8,9 @@ namespace SystemTests.ToDoLists;
 /// <summary>
 /// System tests for POST /todo-lists/{listId}/todos endpoint.
 /// </summary>
-public class ToDoListsControllerPostTodosTests : BaseSystemTest
+public class ToDoListControllerPostTodosTests : BaseSystemTest
 {
-    public ToDoListsControllerPostTodosTests(DatabaseFixture databaseFixture) : base(databaseFixture)
+    public ToDoListControllerPostTodosTests(DatabaseFixture databaseFixture) : base(databaseFixture)
     {
     }
 
@@ -19,7 +19,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithValidData_ReturnsCreatedWithTodoDetails()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         object request = new AddToDoRequestBuilder()
             .WithTitle("Buy groceries")
             .Build();
@@ -46,7 +46,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithEmptyTitle_ReturnsBadRequest()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         object request = new AddToDoRequestBuilder()
             .WithTitle("")
             .Build();
@@ -62,7 +62,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithWhitespaceOnlyTitle_ReturnsBadRequest()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         object request = new AddToDoRequestBuilder()
             .WithTitle("   ")
             .Build();
@@ -78,7 +78,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithTabOnlyTitle_ReturnsBadRequest()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         object request = new AddToDoRequestBuilder()
             .WithTitle("\t\t")
             .Build();
@@ -94,7 +94,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithNewlineOnlyTitle_ReturnsBadRequest()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         object request = new AddToDoRequestBuilder()
             .WithTitle("\n\r")
             .Build();
@@ -110,7 +110,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithNullTitle_ReturnsBadRequest()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         string requestBody = """{"title": null}""";
         var content = new StringContent(requestBody, Encoding.UTF8, "application/json");
 
@@ -125,7 +125,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithVeryLongTitle_ReturnsBadRequest()
     {
         // Arrange - Create title with 201+ characters (exceeds 200 character limit)
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         string longTitle = new string('a', 201);
         object request = new AddToDoRequestBuilder()
             .WithTitle(longTitle)
@@ -142,7 +142,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithTitleExactly200Characters_ReturnsCreated()
     {
         // Arrange - Title at maximum boundary (200 characters)
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         string maxTitle = new string('a', 200);
         object request = new AddToDoRequestBuilder()
             .WithTitle(maxTitle)
@@ -162,7 +162,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithTitleExactly1Character_ReturnsCreated()
     {
         // Arrange - Title at minimum boundary (1 character)
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         object request = new AddToDoRequestBuilder()
             .WithTitle("a")
             .Build();
@@ -229,7 +229,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithDuplicateTitle_ReturnsBadRequest()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         object request = new AddToDoRequestBuilder()
             .WithTitle("Buy groceries")
             .Build();
@@ -249,7 +249,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithMalformedJson_ReturnsBadRequest()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         string malformedJson = """{"title": "Buy groceries" """; // Missing closing brace
         var content = new StringContent(malformedJson, Encoding.UTF8, "application/json");
 
@@ -264,7 +264,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithMissingTitleProperty_ReturnsBadRequest()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         string requestBody = """{}"""; // Missing title property
         var content = new StringContent(requestBody, Encoding.UTF8, "application/json");
 
@@ -279,7 +279,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithExtraProperties_ReturnsCreated()
     {
         // Arrange - JSON with extra properties should be ignored
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         string requestBody = """{"title": "Buy groceries", "extraProperty": "ignored"}""";
         var content = new StringContent(requestBody, Encoding.UTF8, "application/json");
 
@@ -297,7 +297,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithTitleContainingSpecialCharacters_ReturnsCreated()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         object request = new AddToDoRequestBuilder()
             .WithTitle("Buy groceries! @#$%^&*()_+-={}[]|\\:;\"'<>?,./")
             .Build();
@@ -316,7 +316,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithTitleContainingUnicodeCharacters_ReturnsCreated()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         object request = new AddToDoRequestBuilder()
             .WithTitle("買い物 🛒 épicerie مشتريات")
             .Build();
@@ -335,7 +335,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithTitleContainingNewlines_ReturnsCreated()
     {
         // Arrange - Newlines within the title should be accepted
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         object request = new AddToDoRequestBuilder()
             .WithTitle("Buy:\n- Milk\n- Bread\n- Eggs")
             .Build();
@@ -354,7 +354,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithWrongContentType_ReturnsUnsupportedMediaType()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         object request = new AddToDoRequestBuilder().Build();
         string json = System.Text.Json.JsonSerializer.Serialize(request, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase });
         var content = new StringContent(json, Encoding.UTF8, "application/xml");
@@ -370,7 +370,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithMissingContentType_ReturnsBadRequest()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         object request = new AddToDoRequestBuilder().Build();
         string json = System.Text.Json.JsonSerializer.Serialize(request, new System.Text.Json.JsonSerializerOptions { PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase });
         var content = new StringContent(json, Encoding.UTF8);
@@ -387,7 +387,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_MultipleValidTodos_ReturnsCreatedForEach()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         string[] todoTitles = { "Buy milk", "Walk the dog", "Write tests", "Deploy to production" };
 
         // Act & Assert - Add multiple todos
@@ -411,7 +411,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WhenListHas100Todos_ReturnsBadRequest()
     {
         // Arrange - Create a todo list and add 100 todos (the maximum)
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
 
         for (int i = 1; i <= 100; i++)
         {
@@ -436,7 +436,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PutTodos_OnPostTodosEndpoint_ReturnsMethodNotAllowed()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         object request = new AddToDoRequestBuilder().Build();
 
         // Act
@@ -450,7 +450,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task GetTodos_OnPostTodosEndpoint_ReturnsMethodNotAllowed()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
 
         // Act
         HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists/{todoList.ToDoListId}/todos");
@@ -463,7 +463,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task DeleteTodos_OnPostTodosEndpoint_ReturnsMethodNotAllowed()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
 
         // Act
         HttpResponseMessage response = await HttpClient.DeleteAsync($"/api/v1/todo-lists/{todoList.ToDoListId}/todos");
@@ -476,7 +476,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithMalformedJsonMissingQuotes_ReturnsBadRequest()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         string malformedJson = """{title: "Buy groceries"}"""; // Missing quotes on property name
         var content = new StringContent(malformedJson, Encoding.UTF8, "application/json");
 
@@ -491,7 +491,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithMalformedJsonExtraComma_ReturnsBadRequest()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         string malformedJson = """{"title": "Buy groceries",}"""; // Trailing comma
         var content = new StringContent(malformedJson, Encoding.UTF8, "application/json");
 
@@ -506,7 +506,7 @@ public class ToDoListsControllerPostTodosTests : BaseSystemTest
     public async Task PostTodosToList_WithInvalidJsonStructure_ReturnsBadRequest()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         string invalidJson = """["title"]"""; // JSON array instead of object
         var content = new StringContent(invalidJson, Encoding.UTF8, "application/json");
 

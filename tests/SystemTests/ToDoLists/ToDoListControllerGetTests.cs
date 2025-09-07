@@ -7,9 +7,9 @@ namespace SystemTests.ToDoLists;
 /// <summary>
 /// System tests for ToDoLists GET endpoints.
 /// </summary>
-public class ToDoListsControllerGetTests : BaseSystemTest
+public class ToDoListControllerGetTests : BaseSystemTest
 {
-    public ToDoListsControllerGetTests(DatabaseFixture databaseFixture) : base(databaseFixture)
+    public ToDoListControllerGetTests(DatabaseFixture databaseFixture) : base(databaseFixture)
     {
     }
 
@@ -18,7 +18,7 @@ public class ToDoListsControllerGetTests : BaseSystemTest
     public async Task GetToDoList_WithValidIdAndUserId_ReturnsOkWithToDoListDetail()
     {
         // Arrange
-        CreateToDoListResult createdList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, "My Shopping List");
+        CreateToDoListResult createdList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, "My Shopping List");
         string userId = createdList.UserId.ToString();
         string listId = createdList.ToDoListId.ToString();
 
@@ -41,7 +41,7 @@ public class ToDoListsControllerGetTests : BaseSystemTest
     public async Task GetToDoList_WithToDoListContainingMultipleTodos_ReturnsOkWithAllTodos()
     {
         // Arrange
-        CreateToDoListResult createdList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, "Shopping List");
+        CreateToDoListResult createdList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, "Shopping List");
         string userId = createdList.UserId.ToString();
         string listId = createdList.ToDoListId.ToString();
 
@@ -79,7 +79,7 @@ public class ToDoListsControllerGetTests : BaseSystemTest
     public async Task GetToDoList_WithEmptyToDoList_ReturnsOkWithEmptyTodosArray()
     {
         // Arrange
-        CreateToDoListResult createdList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult createdList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         string userId = createdList.UserId.ToString();
         string listId = createdList.ToDoListId.ToString();
 
@@ -163,7 +163,7 @@ public class ToDoListsControllerGetTests : BaseSystemTest
     public async Task GetToDoList_WithValidIdsBuUserDoesNotOwnList_ReturnsForbidden()
     {
         // Arrange
-        CreateToDoListResult createdList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
+        CreateToDoListResult createdList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
         string listId = createdList.ToDoListId.ToString();
         string differentUserId = Guid.NewGuid().ToString(); // Different user ID
 

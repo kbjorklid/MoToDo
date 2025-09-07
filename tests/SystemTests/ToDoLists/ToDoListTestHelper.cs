@@ -20,14 +20,14 @@ public sealed record PaginationApiInfo(int TotalItems, int TotalPages, int Curre
 /// <summary>
 /// Helper methods for ToDoLists system tests.
 /// </summary>
-public static class ToDoListsTestHelper
+public static class ToDoListTestHelper
 {
     /// <summary>
     /// Creates a todo list via the API and returns the created result.
     /// </summary>
     public static async Task<CreateToDoListResult> CreateToDoListAsync(HttpClient httpClient)
     {
-        Guid userId = await UsersTestHelper.CreateUserAsync(httpClient);
+        Guid userId = await UserTestHelper.CreateUserAsync(httpClient);
         object request = new CreateToDoListCommandBuilder()
             .WithUserId(userId.ToString())
             .BuildApiRequest();
@@ -51,7 +51,7 @@ public static class ToDoListsTestHelper
     /// </summary>
     public static async Task<CreateToDoListResult> CreateToDoListAsync(HttpClient httpClient, string title)
     {
-        Guid userId = await UsersTestHelper.CreateUserAsync(httpClient);
+        Guid userId = await UserTestHelper.CreateUserAsync(httpClient);
         object request = new CreateToDoListCommandBuilder()
             .WithUserId(userId.ToString())
             .WithTitle(title)

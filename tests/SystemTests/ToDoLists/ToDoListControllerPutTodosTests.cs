@@ -9,9 +9,9 @@ namespace SystemTests.ToDoLists;
 /// <summary>
 /// System tests for PUT /todo-lists/{listId}/todos/{todoId} endpoint.
 /// </summary>
-public class ToDoListsControllerPutTodosTests : BaseSystemTest
+public class ToDoListControllerPutTodosTests : BaseSystemTest
 {
-    public ToDoListsControllerPutTodosTests(DatabaseFixture databaseFixture) : base(databaseFixture)
+    public ToDoListControllerPutTodosTests(DatabaseFixture databaseFixture) : base(databaseFixture)
     {
     }
 
@@ -20,9 +20,9 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithValidTitleUpdate_ReturnsOkWithUpdatedTodo()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
-        AddToDoResult todo = await ToDoListsTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        AddToDoResult todo = await ToDoListTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
 
         object request = new UpdateToDoRequestBuilder()
             .WithTitle("Buy organic milk")
@@ -49,9 +49,9 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithValidCompletionUpdate_ReturnsOkWithCompletedTodo()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
-        AddToDoResult todo = await ToDoListsTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        AddToDoResult todo = await ToDoListTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
 
         object request = new UpdateToDoRequestBuilder()
             .WithNoTitle()
@@ -78,9 +78,9 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithBothTitleAndCompletionUpdate_ReturnsOkWithUpdatedTodo()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
-        AddToDoResult todo = await ToDoListsTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        AddToDoResult todo = await ToDoListTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
 
         object request = new UpdateToDoRequestBuilder()
             .WithTitle("Buy organic milk")
@@ -107,9 +107,9 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithMarkingCompletedTodoAsIncomplete_ReturnsOkWithIncompleteTodo()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
-        AddToDoResult todo = await ToDoListsTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        AddToDoResult todo = await ToDoListTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
 
         // First mark as completed
         object completeRequest = new UpdateToDoRequestBuilder()
@@ -146,9 +146,9 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithEmptyTitleAndNoCompletion_ReturnsBadRequest()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
-        AddToDoResult todo = await ToDoListsTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        AddToDoResult todo = await ToDoListTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
 
         object request = new UpdateToDoRequestBuilder()
             .WithTitle("")
@@ -168,9 +168,9 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithWhitespaceOnlyTitle_ReturnsBadRequest()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
-        AddToDoResult todo = await ToDoListsTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        AddToDoResult todo = await ToDoListTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
 
         object request = new UpdateToDoRequestBuilder()
             .WithTitle("   ")
@@ -190,9 +190,9 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithVeryLongTitle_ReturnsBadRequest()
     {
         // Arrange - Create title with 201+ characters (exceeds 200 character limit)
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
-        AddToDoResult todo = await ToDoListsTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        AddToDoResult todo = await ToDoListTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
 
         string longTitle = new string('a', 201);
         object request = new UpdateToDoRequestBuilder()
@@ -213,9 +213,9 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithTitleExactly200Characters_ReturnsOk()
     {
         // Arrange - Title at maximum boundary (200 characters)
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
-        AddToDoResult todo = await ToDoListsTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        AddToDoResult todo = await ToDoListTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
 
         string maxTitle = new string('b', 200);
         object request = new UpdateToDoRequestBuilder()
@@ -239,9 +239,9 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithTitleExactly1Character_ReturnsOk()
     {
         // Arrange - Title at minimum boundary (1 character)
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
-        AddToDoResult todo = await ToDoListsTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        AddToDoResult todo = await ToDoListTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
 
         object request = new UpdateToDoRequestBuilder()
             .WithTitle("x")
@@ -264,10 +264,10 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithDuplicateTitleInSameList_ReturnsBadRequest()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
-        _ = await ToDoListsTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
-        AddToDoResult secondTodo = await ToDoListsTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy bread");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
+        AddToDoResult secondTodo = await ToDoListTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy bread");
 
         object request = new UpdateToDoRequestBuilder()
             .WithTitle("Buy milk") // Same title as first todo
@@ -287,9 +287,9 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithSameTitleAsCurrentTodo_ReturnsOk()
     {
         // Arrange - Updating a todo with its current title should be allowed
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
-        AddToDoResult todo = await ToDoListsTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        AddToDoResult todo = await ToDoListTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
 
         object request = new UpdateToDoRequestBuilder()
             .WithTitle("Buy milk") // Same as current title
@@ -313,8 +313,8 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithNonExistentTodoId_ReturnsNotFound()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
         var nonExistentTodoId = Guid.NewGuid();
 
         object request = new UpdateToDoRequestBuilder()
@@ -335,7 +335,7 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithNonExistentListId_ReturnsNotFound()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
         var nonExistentListId = Guid.NewGuid();
         var todoId = Guid.NewGuid();
 
@@ -357,7 +357,7 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithInvalidGuidListId_ReturnsBadRequest()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
         string invalidListId = "invalid-guid";
         var todoId = Guid.NewGuid();
 
@@ -379,8 +379,8 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithInvalidGuidTodoId_ReturnsBadRequest()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
         string invalidTodoId = "invalid-guid";
 
         object request = new UpdateToDoRequestBuilder()
@@ -401,7 +401,7 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithEmptyGuidListId_ReturnsBadRequest()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
         Guid emptyListId = Guid.Empty;
         var todoId = Guid.NewGuid();
 
@@ -423,8 +423,8 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithEmptyGuidTodoId_ReturnsBadRequest()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
         Guid emptyTodoId = Guid.Empty;
 
         object request = new UpdateToDoRequestBuilder()
@@ -445,9 +445,9 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithMissingUserId_ReturnsBadRequest()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
-        AddToDoResult todo = await ToDoListsTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        AddToDoResult todo = await ToDoListTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
 
         object request = new UpdateToDoRequestBuilder()
             .WithTitle("Updated title")
@@ -467,8 +467,8 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithInvalidUserId_ReturnsBadRequest()
     {
         // Arrange
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient);
-        AddToDoResult todo = await ToDoListsTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient);
+        AddToDoResult todo = await ToDoListTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
 
         object request = new UpdateToDoRequestBuilder()
             .WithTitle("Updated title")
@@ -488,10 +488,10 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithUnauthorizedUser_ReturnsForbidden()
     {
         // Arrange - Create todo list with one user, try to update with different user
-        Guid user1Id = await UsersTestHelper.CreateUserAsync(HttpClient);
-        Guid user2Id = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, user1Id, "Shopping List");
-        AddToDoResult todo = await ToDoListsTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
+        Guid user1Id = await UserTestHelper.CreateUserAsync(HttpClient);
+        Guid user2Id = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, user1Id, "Shopping List");
+        AddToDoResult todo = await ToDoListTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
 
         object request = new UpdateToDoRequestBuilder()
             .WithTitle("Unauthorized update")
@@ -511,9 +511,9 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithBothTitleAndCompletionNull_ReturnsOk()
     {
         // Arrange - Request with both null values should succeed as no-op
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
-        AddToDoResult todo = await ToDoListsTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        AddToDoResult todo = await ToDoListTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
 
         object request = new UpdateToDoRequestBuilder()
             .WithNoTitle()
@@ -538,9 +538,9 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithMalformedJson_ReturnsBadRequest()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
-        AddToDoResult todo = await ToDoListsTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        AddToDoResult todo = await ToDoListTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
 
         string malformedJson = """{"title": "Updated title" """; // Missing closing brace
         var content = new StringContent(malformedJson, Encoding.UTF8, "application/json");
@@ -558,9 +558,9 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithEmptyJsonBody_ReturnsOk()
     {
         // Arrange - Empty JSON body should be treated as no updates
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
-        AddToDoResult todo = await ToDoListsTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        AddToDoResult todo = await ToDoListTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
 
         string emptyJson = "{}";
         var content = new StringContent(emptyJson, Encoding.UTF8, "application/json");
@@ -582,9 +582,9 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithTitleContainingSpecialCharacters_ReturnsOk()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
-        AddToDoResult todo = await ToDoListsTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        AddToDoResult todo = await ToDoListTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
 
         object request = new UpdateToDoRequestBuilder()
             .WithTitle("Buy groceries! @#$%^&*()_+-={}[]|\\:;\"'<>?,./")
@@ -607,9 +607,9 @@ public class ToDoListsControllerPutTodosTests : BaseSystemTest
     public async Task PutTodos_WithTitleContainingUnicodeCharacters_ReturnsOk()
     {
         // Arrange
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient);
-        CreateToDoListResult todoList = await ToDoListsTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
-        AddToDoResult todo = await ToDoListsTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient);
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, userId, "Shopping List");
+        AddToDoResult todo = await ToDoListTestHelper.AddToDoAsync(HttpClient, todoList.ToDoListId, "Buy milk");
 
         object request = new UpdateToDoRequestBuilder()
             .WithTitle("買い物 🛒 épicerie مشتريات")

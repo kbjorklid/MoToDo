@@ -7,9 +7,9 @@ namespace SystemTests.Users;
 /// <summary>
 /// System tests for Users GET individual user endpoints.
 /// </summary>
-public class UsersControllerGetUserTests : BaseSystemTest
+public class UserControllerGetUserTests : BaseSystemTest
 {
-    public UsersControllerGetUserTests(DatabaseFixture databaseFixture) : base(databaseFixture)
+    public UserControllerGetUserTests(DatabaseFixture databaseFixture) : base(databaseFixture)
     {
     }
 
@@ -21,7 +21,7 @@ public class UsersControllerGetUserTests : BaseSystemTest
             .WithEmail("john.doe@example.com")
             .WithUserName("johndoe")
             .Build();
-        Guid userId = await UsersTestHelper.CreateUserAsync(HttpClient, addCommand);
+        Guid userId = await UserTestHelper.CreateUserAsync(HttpClient, addCommand);
 
         // Act
         HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/users/{userId}");

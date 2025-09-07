@@ -9,9 +9,9 @@ namespace SystemTests.Users;
 /// <summary>
 /// System tests for Users POST endpoints.
 /// </summary>
-public class UsersControllerPostTests : BaseSystemTest
+public class UserControllerPostTests : BaseSystemTest
 {
-    public UsersControllerPostTests(DatabaseFixture databaseFixture) : base(databaseFixture)
+    public UserControllerPostTests(DatabaseFixture databaseFixture) : base(databaseFixture)
     {
     }
 

@@ -8,7 +8,7 @@ namespace SystemTests.Users;
 /// <summary>
 /// Helper class for Users-related system test operations.
 /// </summary>
-public static class UsersTestHelper
+public static class UserTestHelper
 {
     /// <summary>
     /// Creates a user via API and returns the user ID.
