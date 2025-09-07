@@ -27,18 +27,15 @@ public static class CreateToDoListCommandHandler
         IMessageBus messageBus,
         CancellationToken cancellationToken)
     {
-        // Validate and convert UserId
         Result<UserId> userIdResult = UserId.FromString(command.UserId);
         if (userIdResult.IsFailure)
             return userIdResult.Error;
 
-        // Check if user exists by querying the Users module
         GetUserByIdQuery getUserQuery = new(command.UserId);
         Result<UserDto> userResult = await messageBus.InvokeAsync<Result<UserDto>>(getUserQuery, cancellationToken);
         if (userResult.IsFailure)
             return userResult.Error;
 
-        // Create the ToDoList
         DateTime now = timeProvider.GetUtcNow().UtcDateTime;
         Result<ToDoList> toDoListResult = ToDoList.Create(userIdResult.Value, command.Title, now);
         if (toDoListResult.IsFailure)
@@ -46,7 +43,6 @@ public static class CreateToDoListCommandHandler
 
         ToDoList toDoList = toDoListResult.Value;
 
-        // Save to repository
         await toDoListRepository.AddAsync(toDoList, cancellationToken);
         await toDoListRepository.SaveChangesAsync(cancellationToken);
 

@@ -27,27 +27,22 @@ public static class GetToDoListQueryHandler
         IToDoListRepository toDoListRepository,
         CancellationToken cancellationToken)
     {
-        // Parse and validate ToDoListId
         Result<ToDoListId> toDoListIdResult = ToDoListId.FromString(query.ToDoListId);
         if (toDoListIdResult.IsFailure)
             return toDoListIdResult.Error;
 
-        // Parse and validate UserId
         Result<UserId> userIdResult = UserId.FromString(query.UserId);
         if (userIdResult.IsFailure)
             return userIdResult.Error;
 
-        // Get the todo list from the repository
         ToDoList? toDoList = await toDoListRepository.GetByIdAsync(toDoListIdResult.Value, cancellationToken);
 
         if (toDoList == null)
             return new Error(Codes.NotFound, "Todo list not found.", ErrorType.NotFound);
 
-        // Check if user owns this todo list
         if (toDoList.UserId != userIdResult.Value)
             return new Error(Codes.AccessDenied, "Access denied to this todo list.", ErrorType.Forbidden);
 
-        // Map to DTO
         ToDoDto[] todosDto = toDoList.Todos
             .OrderBy(t => t.CreatedAt)
             .Select(t => new ToDoDto(

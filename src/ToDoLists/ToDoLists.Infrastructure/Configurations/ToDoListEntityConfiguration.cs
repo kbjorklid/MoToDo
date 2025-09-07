@@ -25,7 +25,6 @@ internal sealed class ToDoListEntityConfiguration : IEntityTypeConfiguration<ToD
                 "\"Id\" != '00000000-0000-0000-0000-000000000000'");
         });
 
-        // Primary Key - ToDoListId value object
         builder.HasKey(tl => tl.Id);
         builder.Property(tl => tl.Id)
             .HasConversion(
@@ -34,7 +33,6 @@ internal sealed class ToDoListEntityConfiguration : IEntityTypeConfiguration<ToD
                     .GetValueOrThrow($"Invalid ToDoListId found in database: {guid}"))
             .HasColumnName("Id");
 
-        // UserId value object - store as Guid
         builder.Property(tl => tl.UserId)
             .HasConversion(
                 userId => userId.Value,
@@ -43,7 +41,6 @@ internal sealed class ToDoListEntityConfiguration : IEntityTypeConfiguration<ToD
             .HasColumnName("UserId")
             .IsRequired();
 
-        // Title value object - store as string
         builder.Property(tl => tl.Title)
             .HasConversion(
                 title => title.Value,
@@ -53,7 +50,6 @@ internal sealed class ToDoListEntityConfiguration : IEntityTypeConfiguration<ToD
             .HasMaxLength(Title.MaxLength)
             .IsRequired();
 
-        // Timestamps with timezone support for UTC dates
         builder.Property(tl => tl.CreatedAt)
             .HasColumnName("CreatedAt")
             .HasColumnType("timestamptz")
@@ -80,7 +76,6 @@ internal sealed class ToDoListEntityConfiguration : IEntityTypeConfiguration<ToD
             todoBuilder.WithOwner().HasForeignKey("ToDoListId");
             todoBuilder.HasKey("Id", "ToDoListId");
 
-            // ToDoId value object
             todoBuilder.Property(t => t.Id)
                 .HasConversion(
                     id => id.Value,
@@ -88,7 +83,6 @@ internal sealed class ToDoListEntityConfiguration : IEntityTypeConfiguration<ToD
                         .GetValueOrThrow($"Invalid ToDoId found in database: {guid}"))
                 .HasColumnName("Id");
 
-            // Title value object
             todoBuilder.Property(t => t.Title)
                 .HasConversion(
                     title => title.Value,
@@ -98,7 +92,6 @@ internal sealed class ToDoListEntityConfiguration : IEntityTypeConfiguration<ToD
                 .HasMaxLength(Title.MaxLength)
                 .IsRequired();
 
-            // Simple properties
             todoBuilder.Property(t => t.IsCompleted)
                 .HasColumnName("IsCompleted")
                 .IsRequired();

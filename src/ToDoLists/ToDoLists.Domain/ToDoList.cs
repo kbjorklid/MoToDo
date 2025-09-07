@@ -71,15 +71,14 @@ public sealed class ToDoList : AggregateRoot<ToDoListId>
     /// <returns>A Result containing the new ToDo instance if successful, or an error if validation fails.</returns>
     public Result<ToDo> AddToDo(string titleValue, DateTime addedAt)
     {
-        if (_todos.Count >= MAX_TODOS)
+        if (HasMaximumTodos())
             return new Error(Codes.MaxTodosExceeded, $"Cannot add more than {MAX_TODOS} todos to a list.", ErrorType.Validation);
 
         Result<Title> titleResult = Title.Create(titleValue);
         if (titleResult.IsFailure)
             return titleResult.Error;
 
-        // Check for duplicate titles (case-insensitive)
-        if (_todos.Any(t => string.Equals(t.Title.Value, titleResult.Value.Value, StringComparison.OrdinalIgnoreCase)))
+        if (HasDuplicateTitle(titleResult.Value))
             return new Error(Codes.DuplicateTitle, "A todo with this title already exists in the list.", ErrorType.Validation);
 
         var toDo = ToDo.Create(titleResult.Value, addedAt);
@@ -166,19 +165,14 @@ public sealed class ToDoList : AggregateRoot<ToDoListId>
 
         bool hasChanges = false;
 
-        // Update title if provided
         if (newTitle != null)
         {
             Result<Title> titleResult = Title.Create(newTitle);
             if (titleResult.IsFailure)
                 return titleResult.Error;
 
-            // Check for duplicate titles (excluding current todo)
-            if (_todos.Any(t => t.Id != todoId &&
-                                string.Equals(t.Title.Value, titleResult.Value.Value, StringComparison.OrdinalIgnoreCase)))
-            {
+            if (HasDuplicateTitleExcluding(titleResult.Value, todoId))
                 return new Error(Codes.DuplicateTitle, "A todo with this title already exists in the list.", ErrorType.Validation);
-            }
 
             Result updateTitleResult = toDo.UpdateTitle(titleResult.Value);
             if (updateTitleResult.IsFailure)
@@ -210,4 +204,13 @@ public sealed class ToDoList : AggregateRoot<ToDoListId>
 
         return Result.Success();
     }
+
+    private bool HasMaximumTodos() => _todos.Count >= MAX_TODOS;
+
+    private bool HasDuplicateTitle(Title title) =>
+        _todos.Any(t => string.Equals(t.Title.Value, title.Value, StringComparison.OrdinalIgnoreCase));
+
+    private bool HasDuplicateTitleExcluding(Title title, ToDoId excludeId) =>
+        _todos.Any(t => t.Id != excludeId &&
+                       string.Equals(t.Title.Value, title.Value, StringComparison.OrdinalIgnoreCase));
 }

@@ -23,17 +23,14 @@ public static class AddToDoCommandHandler
         TimeProvider timeProvider,
         CancellationToken cancellationToken)
     {
-        // Validate and convert ToDoListId
         Result<ToDoListId> toDoListIdResult = ToDoListId.FromString(command.ToDoListId);
         if (toDoListIdResult.IsFailure)
             return toDoListIdResult.Error;
 
-        // Load the existing todo list
         ToDoList? toDoList = await toDoListRepository.GetByIdAsync(toDoListIdResult.Value, cancellationToken);
         if (toDoList == null)
             return new Error(ToDoList.Codes.NotFound, "The specified todo list was not found.", ErrorType.NotFound);
 
-        // Add the new todo item
         DateTime now = timeProvider.GetUtcNow().UtcDateTime;
         Result<ToDo> addToDoResult = toDoList.AddToDo(command.Title, now);
         if (addToDoResult.IsFailure)
@@ -41,11 +38,9 @@ public static class AddToDoCommandHandler
 
         ToDo newToDo = addToDoResult.Value;
 
-        // Save changes
         await toDoListRepository.UpdateAsync(toDoList, cancellationToken);
         await toDoListRepository.SaveChangesAsync(cancellationToken);
 
-        // Map to result
         return new AddToDoResult(
             newToDo.Id.Value,
             newToDo.Title.Value,
