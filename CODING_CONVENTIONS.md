@@ -127,6 +127,7 @@ When you have complex inline logic or multiple operations within a method, extra
 - Use method names that clearly express the intent and return type
 - Keep the main method flow readable by focusing on the "what" rather than the "how"
 - Extract logic even for simple operations if it improves clarity
+- The extracted private method should be placed under the first method that calls it.
 
 ### Example
 
