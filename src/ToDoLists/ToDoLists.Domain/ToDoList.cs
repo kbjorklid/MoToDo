@@ -98,12 +98,14 @@ public sealed class ToDoList : AggregateRoot<ToDoListId>
     /// <returns>A Result indicating success or failure.</returns>
     public Result RemoveToDo(ToDoId todoId, DateTime removedAt)
     {
-        ToDo? toDo = _todos.FirstOrDefault(t => t.Id == todoId);
+        ToDo? toDo = FindToDo(todoId);
         if (toDo == null)
             return new Error(Codes.ToDoNotFound, "The specified todo item was not found in this list.", ErrorType.NotFound);
 
         _todos.Remove(toDo);
         UpdatedAt = removedAt;
+
+        AddDomainEvent(new ToDoRemovedEvent(Id, UserId, todoId, toDo.Title, removedAt));
 
         return Result.Success();
     }
@@ -137,7 +139,7 @@ public sealed class ToDoList : AggregateRoot<ToDoListId>
     /// <returns>A Result indicating success or failure.</returns>
     public Result MarkToDoAsCompleted(ToDoId todoId, DateTime completedAt)
     {
-        ToDo? toDo = _todos.FirstOrDefault(t => t.Id == todoId);
+        ToDo? toDo = FindToDo(todoId);
         if (toDo == null)
             return new Error(Codes.ToDoNotFound, "The specified todo item was not found in this list.", ErrorType.NotFound);
 
@@ -159,7 +161,7 @@ public sealed class ToDoList : AggregateRoot<ToDoListId>
     /// <returns>A Result indicating success or failure.</returns>
     public Result UpdateToDo(ToDoId todoId, string? newTitle, bool? isCompleted, DateTime updatedAt)
     {
-        ToDo? toDo = _todos.FirstOrDefault(t => t.Id == todoId);
+        ToDo? toDo = FindToDo(todoId);
         if (toDo == null)
             return new Error(Codes.ToDoNotFound, "The specified todo item was not found in this list.", ErrorType.NotFound);
 
@@ -181,7 +183,6 @@ public sealed class ToDoList : AggregateRoot<ToDoListId>
             hasChanges = true;
         }
 
-        // Update completion status if provided
         if (isCompleted.HasValue)
         {
             if (isCompleted.Value && !toDo.IsCompleted)
@@ -216,6 +217,8 @@ public sealed class ToDoList : AggregateRoot<ToDoListId>
 
         return Result.Success();
     }
+
+    private ToDo? FindToDo(ToDoId todoId) => _todos.FirstOrDefault(t => t.Id == todoId);
 
     private bool HasMaximumTodos() => _todos.Count >= MAX_TODOS;
 

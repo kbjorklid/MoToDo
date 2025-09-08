@@ -171,6 +171,31 @@ public class ToDoListController : ControllerBase
     }
 
     /// <summary>
+    /// Removes a todo item from an existing todo list.
+    /// </summary>
+    [HttpDelete("{listId}/todos/{todoId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status403Forbidden)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status404NotFound)]
+    [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
+    public async Task<IActionResult> DeleteToDoItem(
+        string listId,
+        string todoId,
+        [FromQuery] string userId)
+    {
+        RemoveToDoCommand command = new(listId, todoId, userId);
+        Result<RemoveToDoResult> result = await _messageBus.InvokeAsync<Result<RemoveToDoResult>>(command);
+
+        if (result.IsSuccess)
+        {
+            return NoContent();
+        }
+
+        return HandleError(result.Error);
+    }
+
+    /// <summary>
     /// Deletes an existing todo list.
     /// </summary>
     [HttpDelete("{id}")]
