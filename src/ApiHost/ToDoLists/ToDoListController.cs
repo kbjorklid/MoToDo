@@ -34,7 +34,13 @@ public class ToDoListController : ControllerBase
         [FromQuery] int? page = null,
         [FromQuery] int? limit = null)
     {
-        GetToDoListsQuery query = new(userId, page, limit, sort);
+        GetToDoListsQuery query = new()
+        {
+            UserId = userId,
+            Page = page,
+            Limit = limit,
+            Sort = sort
+        };
         Result<GetToDoListsResult> result = await _messageBus.InvokeAsync<Result<GetToDoListsResult>>(query);
 
         if (result.IsSuccess)
@@ -55,7 +61,11 @@ public class ToDoListController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> CreateToDoList([FromBody] CreateToDoListApiRequest request)
     {
-        CreateToDoListCommand command = new(request.UserId, request.Title);
+        CreateToDoListCommand command = new()
+        {
+            UserId = request.UserId,
+            Title = request.Title
+        };
         Result<CreateToDoListResult> result = await _messageBus.InvokeAsync<Result<CreateToDoListResult>>(command);
 
         if (result.IsSuccess)
@@ -81,7 +91,11 @@ public class ToDoListController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetToDoList(string id, [FromQuery] string userId)
     {
-        GetToDoListQuery query = new(id, userId);
+        GetToDoListQuery query = new()
+        {
+            ToDoListId = id,
+            UserId = userId
+        };
         Result<ToDoListDetailDto> result = await _messageBus.InvokeAsync<Result<ToDoListDetailDto>>(query);
 
         if (result.IsSuccess)
@@ -107,7 +121,12 @@ public class ToDoListController : ControllerBase
         [FromQuery] string userId,
         [FromBody] UpdateToDoListTitleApiRequest request)
     {
-        UpdateToDoListTitleCommand command = new(id, userId, request.Title);
+        UpdateToDoListTitleCommand command = new()
+        {
+            ToDoListId = id,
+            UserId = userId,
+            Title = request.Title
+        };
         Result<UpdateToDoListTitleResult> result = await _messageBus.InvokeAsync<Result<UpdateToDoListTitleResult>>(command);
 
         if (result.IsSuccess)
@@ -128,7 +147,11 @@ public class ToDoListController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> AddToDoToList(string listId, [FromBody] AddToDoApiRequest request)
     {
-        AddToDoCommand command = new(listId, request.Title);
+        AddToDoCommand command = new()
+        {
+            ToDoListId = listId,
+            Title = request.Title
+        };
         Result<AddToDoResult> result = await _messageBus.InvokeAsync<Result<AddToDoResult>>(command);
 
         if (result.IsSuccess)
@@ -158,7 +181,14 @@ public class ToDoListController : ControllerBase
         [FromQuery] string userId,
         [FromBody] UpdateToDoApiRequest request)
     {
-        UpdateToDoCommand command = new(listId, todoId, userId, request.Title, request.IsCompleted);
+        UpdateToDoCommand command = new()
+        {
+            ToDoListId = listId,
+            ToDoId = todoId,
+            UserId = userId,
+            Title = request.Title,
+            IsCompleted = request.IsCompleted
+        };
         Result<UpdateToDoResult> result = await _messageBus.InvokeAsync<Result<UpdateToDoResult>>(command);
 
         if (result.IsSuccess)
@@ -184,7 +214,12 @@ public class ToDoListController : ControllerBase
         string todoId,
         [FromQuery] string userId)
     {
-        RemoveToDoCommand command = new(listId, todoId, userId);
+        RemoveToDoCommand command = new()
+        {
+            ToDoListId = listId,
+            ToDoId = todoId,
+            UserId = userId
+        };
         Result<RemoveToDoResult> result = await _messageBus.InvokeAsync<Result<RemoveToDoResult>>(command);
 
         if (result.IsSuccess)
@@ -206,7 +241,11 @@ public class ToDoListController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteToDoList(string id, [FromQuery] string userId)
     {
-        DeleteToDoListCommand command = new(id, userId);
+        DeleteToDoListCommand command = new()
+        {
+            ToDoListId = id,
+            UserId = userId
+        };
         Result<DeleteToDoListResult> result = await _messageBus.InvokeAsync<Result<DeleteToDoListResult>>(command);
 
         if (result.IsSuccess)
@@ -336,7 +375,11 @@ public class ToDoListController : ControllerBase
 
     private async Task<IActionResult> GetUpdatedToDoListResponse(string id, string userId)
     {
-        GetToDoListQuery getQuery = new(id, userId);
+        GetToDoListQuery getQuery = new()
+        {
+            ToDoListId = id,
+            UserId = userId
+        };
         Result<ToDoListDetailDto> detailResult = await _messageBus.InvokeAsync<Result<ToDoListDetailDto>>(getQuery);
 
         if (detailResult.IsSuccess)

@@ -39,11 +39,13 @@ public static class ToDoListTestHelper
         CreateToDoListApiResponse apiResponse = await FromJsonAsync<CreateToDoListApiResponse>(response);
 
         // Convert API response back to contract result for backward compatibility
-        return new CreateToDoListResult(
-            Guid.Parse(apiResponse.Id),
-            Guid.Parse(apiResponse.UserId),
-            apiResponse.Title,
-            apiResponse.CreatedAt);
+        return new CreateToDoListResult
+        {
+            ToDoListId = Guid.Parse(apiResponse.Id),
+            UserId = Guid.Parse(apiResponse.UserId),
+            Title = apiResponse.Title,
+            CreatedAt = apiResponse.CreatedAt
+        };
     }
 
     /// <summary>
@@ -64,11 +66,13 @@ public static class ToDoListTestHelper
         CreateToDoListApiResponse apiResponse = await FromJsonAsync<CreateToDoListApiResponse>(response);
 
         // Convert API response back to contract result for backward compatibility
-        return new CreateToDoListResult(
-            Guid.Parse(apiResponse.Id),
-            Guid.Parse(apiResponse.UserId),
-            apiResponse.Title,
-            apiResponse.CreatedAt);
+        return new CreateToDoListResult
+        {
+            ToDoListId = Guid.Parse(apiResponse.Id),
+            UserId = Guid.Parse(apiResponse.UserId),
+            Title = apiResponse.Title,
+            CreatedAt = apiResponse.CreatedAt
+        };
     }
 
     /// <summary>
@@ -88,11 +92,13 @@ public static class ToDoListTestHelper
         CreateToDoListApiResponse apiResponse = await FromJsonAsync<CreateToDoListApiResponse>(response);
 
         // Convert API response back to contract result for backward compatibility
-        return new CreateToDoListResult(
-            Guid.Parse(apiResponse.Id),
-            Guid.Parse(apiResponse.UserId),
-            apiResponse.Title,
-            apiResponse.CreatedAt);
+        return new CreateToDoListResult
+        {
+            ToDoListId = Guid.Parse(apiResponse.Id),
+            UserId = Guid.Parse(apiResponse.UserId),
+            Title = apiResponse.Title,
+            CreatedAt = apiResponse.CreatedAt
+        };
     }
 
     /// <summary>
@@ -111,11 +117,13 @@ public static class ToDoListTestHelper
         CreateToDoListApiResponse apiResponse = await FromJsonAsync<CreateToDoListApiResponse>(response);
 
         // Convert API response back to contract result for backward compatibility
-        return new CreateToDoListResult(
-            Guid.Parse(apiResponse.Id),
-            Guid.Parse(apiResponse.UserId),
-            apiResponse.Title,
-            apiResponse.CreatedAt);
+        return new CreateToDoListResult
+        {
+            ToDoListId = Guid.Parse(apiResponse.Id),
+            UserId = Guid.Parse(apiResponse.UserId),
+            Title = apiResponse.Title,
+            CreatedAt = apiResponse.CreatedAt
+        };
     }
 
     /// <summary>
@@ -144,12 +152,14 @@ public static class ToDoListTestHelper
         AddToDoApiResponse apiResponse = await FromJsonAsync<AddToDoApiResponse>(response);
 
         // Convert API response back to contract result for backward compatibility
-        return new AddToDoResult(
-            Guid.Parse(apiResponse.Id),
-            apiResponse.Title,
-            apiResponse.IsCompleted,
-            apiResponse.CreatedAt,
-            apiResponse.CompletedAt);
+        return new AddToDoResult
+        {
+            Id = Guid.Parse(apiResponse.Id),
+            Title = apiResponse.Title,
+            IsCompleted = apiResponse.IsCompleted,
+            CreatedAt = apiResponse.CreatedAt,
+            CompletedAt = apiResponse.CompletedAt
+        };
     }
 
     /// <summary>
@@ -166,12 +176,14 @@ public static class ToDoListTestHelper
         AddToDoApiResponse apiResponse = await FromJsonAsync<AddToDoApiResponse>(response);
 
         // Convert API response back to contract result for backward compatibility
-        return new AddToDoResult(
-            Guid.Parse(apiResponse.Id),
-            apiResponse.Title,
-            apiResponse.IsCompleted,
-            apiResponse.CreatedAt,
-            apiResponse.CompletedAt);
+        return new AddToDoResult
+        {
+            Id = Guid.Parse(apiResponse.Id),
+            Title = apiResponse.Title,
+            IsCompleted = apiResponse.IsCompleted,
+            CreatedAt = apiResponse.CreatedAt,
+            CompletedAt = apiResponse.CompletedAt
+        };
     }
 
     /// <summary>

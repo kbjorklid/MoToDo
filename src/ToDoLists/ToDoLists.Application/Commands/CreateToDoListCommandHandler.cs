@@ -31,7 +31,10 @@ public static class CreateToDoListCommandHandler
         if (userIdResult.IsFailure)
             return userIdResult.Error;
 
-        GetUserByIdQuery getUserQuery = new(command.UserId);
+        GetUserByIdQuery getUserQuery = new()
+        {
+            UserId = command.UserId
+        };
         Result<UserDto> userResult = await messageBus.InvokeAsync<Result<UserDto>>(getUserQuery, cancellationToken);
         if (userResult.IsFailure)
             return userResult.Error;
@@ -46,11 +49,12 @@ public static class CreateToDoListCommandHandler
         await toDoListRepository.AddAsync(toDoList, cancellationToken);
         await toDoListRepository.SaveChangesAsync(cancellationToken);
 
-        return new CreateToDoListResult(
-            toDoList.Id.Value,
-            toDoList.UserId.Value,
-            toDoList.Title.Value,
-            toDoList.CreatedAt
-        );
+        return new CreateToDoListResult
+        {
+            ToDoListId = toDoList.Id.Value,
+            UserId = toDoList.UserId.Value,
+            Title = toDoList.Title.Value,
+            CreatedAt = toDoList.CreatedAt
+        };
     }
 }

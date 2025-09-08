@@ -3,16 +3,46 @@ namespace ToDoLists.Contracts;
 /// <summary>
 /// Command to remove a todo item from an existing todo list.
 /// </summary>
-/// <param name="ToDoListId">The unique identifier of the todo list.</param>
-/// <param name="ToDoId">The unique identifier of the todo item to remove.</param>
-/// <param name="UserId">The unique identifier of the user (for authorization).</param>
-public sealed record RemoveToDoCommand(string ToDoListId, string ToDoId, string UserId);
+public sealed record RemoveToDoCommand
+{
+    /// <summary>
+    /// The unique identifier of the todo list.
+    /// </summary>
+    public required string ToDoListId { get; init; }
+
+    /// <summary>
+    /// The unique identifier of the todo item to remove.
+    /// </summary>
+    public required string ToDoId { get; init; }
+
+    /// <summary>
+    /// The unique identifier of the user (for authorization).
+    /// </summary>
+    public required string UserId { get; init; }
+}
 
 /// <summary>
 /// Result of successfully removing a todo item from a list.
 /// </summary>
-/// <param name="ToDoListId">The unique identifier of the todo list.</param>
-/// <param name="ToDoId">The unique identifier of the removed todo item.</param>
-/// <param name="UserId">The unique identifier of the user who owned the list.</param>
-/// <param name="RemovedAt">The date and time when the todo item was removed.</param>
-public sealed record RemoveToDoResult(Guid ToDoListId, Guid ToDoId, Guid UserId, DateTime RemovedAt);
+public sealed record RemoveToDoResult
+{
+    /// <summary>
+    /// The unique identifier of the todo list.
+    /// </summary>
+    public Guid ToDoListId { get; init; }
+
+    /// <summary>
+    /// The unique identifier of the removed todo item.
+    /// </summary>
+    public Guid ToDoId { get; init; }
+
+    /// <summary>
+    /// The unique identifier of the user who owned the list.
+    /// </summary>
+    public Guid UserId { get; init; }
+
+    /// <summary>
+    /// The date and time when the todo item was removed.
+    /// </summary>
+    public DateTime RemovedAt { get; init; }
+}

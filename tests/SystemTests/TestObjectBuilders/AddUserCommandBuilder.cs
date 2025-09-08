@@ -25,6 +25,10 @@ public class AddUserCommandBuilder
 
     public AddUserCommand Build()
     {
-        return new AddUserCommand(_email, _userName);
+        return new AddUserCommand
+        {
+            Email = _email,
+            UserName = _userName
+        };
     }
 }

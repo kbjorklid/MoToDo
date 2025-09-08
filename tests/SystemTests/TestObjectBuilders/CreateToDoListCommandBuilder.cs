@@ -25,7 +25,11 @@ public class CreateToDoListCommandBuilder
 
     public CreateToDoListCommand Build()
     {
-        return new CreateToDoListCommand(_userId, _title);
+        return new CreateToDoListCommand
+        {
+            UserId = _userId,
+            Title = _title
+        };
     }
 
     /// <summary>

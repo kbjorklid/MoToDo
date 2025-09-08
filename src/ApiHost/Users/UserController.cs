@@ -30,7 +30,11 @@ public class UserController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> AddUser([FromBody] AddUserApiRequest request)
     {
-        AddUserCommand command = new(request.Email, request.UserName);
+        AddUserCommand command = new()
+        {
+            Email = request.Email,
+            UserName = request.UserName
+        };
         Result<AddUserResult> result = await _messageBus.InvokeAsync<Result<AddUserResult>>(command);
 
         if (result.IsSuccess)
@@ -59,7 +63,14 @@ public class UserController : ControllerBase
         [FromQuery] string? email = null,
         [FromQuery] string? userName = null)
     {
-        GetUsersQuery query = new(page, limit, sort, email, userName);
+        GetUsersQuery query = new()
+        {
+            Page = page,
+            Limit = limit,
+            Sort = sort,
+            Email = email,
+            UserName = userName
+        };
         Result<GetUsersResult> result = await _messageBus.InvokeAsync<Result<GetUsersResult>>(query);
 
         if (result.IsSuccess)
@@ -81,7 +92,10 @@ public class UserController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> GetUser(string userId)
     {
-        GetUserByIdQuery query = new(userId);
+        GetUserByIdQuery query = new()
+        {
+            UserId = userId
+        };
         Result<UserDto> result = await _messageBus.InvokeAsync<Result<UserDto>>(query);
 
         if (result.IsSuccess)
@@ -103,7 +117,10 @@ public class UserController : ControllerBase
     [ProducesResponseType(typeof(ProblemDetails), StatusCodes.Status500InternalServerError)]
     public async Task<IActionResult> DeleteUser(string userId)
     {
-        DeleteUserCommand command = new(userId);
+        DeleteUserCommand command = new()
+        {
+            UserId = userId
+        };
         Result result = await _messageBus.InvokeAsync<Result>(command);
 
         if (result.IsSuccess)

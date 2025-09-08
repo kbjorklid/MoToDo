@@ -16,7 +16,7 @@ public class AddUserCommandHandlerTests
     public async Task Handle_ValidCommand_ReturnsSuccessResult()
     {
         // Arrange
-        var command = new AddUserCommand("test@example.com", "testuser");
+        var command = new AddUserCommand { Email = "test@example.com", UserName = "testuser" };
         _userRepository.GetByEmailAsync(Arg.Any<Email>()).Returns((User?)null);
         _userRepository.GetByUserNameAsync(Arg.Any<UserName>()).Returns((User?)null);
 
@@ -36,7 +36,7 @@ public class AddUserCommandHandlerTests
     public async Task Handle_EmailAlreadyExists_ReturnsValidationError()
     {
         // Arrange
-        var command = new AddUserCommand("test@example.com", "testuser");
+        var command = new AddUserCommand { Email = "test@example.com", UserName = "testuser" };
         User existingUser = User.Register("test@example.com", "existinguser", DateTime.UtcNow).Value;
         _userRepository.GetByEmailAsync(Arg.Any<Email>()).Returns(existingUser);
 
@@ -55,7 +55,7 @@ public class AddUserCommandHandlerTests
     public async Task Handle_UserNameAlreadyExists_ReturnsValidationError()
     {
         // Arrange
-        var command = new AddUserCommand("test@example.com", "testuser");
+        var command = new AddUserCommand { Email = "test@example.com", UserName = "testuser" };
         User existingUser = User.Register("existing@example.com", "testuser", DateTime.UtcNow).Value;
         _userRepository.GetByEmailAsync(Arg.Any<Email>()).Returns((User?)null);
         _userRepository.GetByUserNameAsync(Arg.Any<UserName>()).Returns(existingUser);
@@ -75,7 +75,7 @@ public class AddUserCommandHandlerTests
     public async Task Handle_InvalidEmail_ReturnsValidationError()
     {
         // Arrange
-        var command = new AddUserCommand("invalid-email", "testuser");
+        var command = new AddUserCommand { Email = "invalid-email", UserName = "testuser" };
 
         // Act
         Result<AddUserResult> result = await AddUserCommandHandler.Handle(command, _userRepository, _timeProvider);
@@ -91,7 +91,7 @@ public class AddUserCommandHandlerTests
     public async Task Handle_InvalidUserName_ReturnsValidationError()
     {
         // Arrange
-        var command = new AddUserCommand("test@example.com", ""); // Empty username
+        var command = new AddUserCommand { Email = "test@example.com", UserName = "" }; // Empty username
 
         // Act
         Result<AddUserResult> result = await AddUserCommandHandler.Handle(command, _userRepository, _timeProvider);

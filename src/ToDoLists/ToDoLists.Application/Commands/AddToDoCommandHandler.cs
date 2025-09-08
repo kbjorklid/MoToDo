@@ -41,12 +41,13 @@ public static class AddToDoCommandHandler
         await toDoListRepository.UpdateAsync(toDoList, cancellationToken);
         await toDoListRepository.SaveChangesAsync(cancellationToken);
 
-        return new AddToDoResult(
-            newToDo.Id.Value,
-            newToDo.Title.Value,
-            newToDo.IsCompleted,
-            newToDo.CreatedAt,
-            newToDo.CompletedAt
-        );
+        return new AddToDoResult
+        {
+            Id = newToDo.Id.Value,
+            Title = newToDo.Title.Value,
+            IsCompleted = newToDo.IsCompleted,
+            CreatedAt = newToDo.CreatedAt,
+            CompletedAt = newToDo.CompletedAt
+        };
     }
 }

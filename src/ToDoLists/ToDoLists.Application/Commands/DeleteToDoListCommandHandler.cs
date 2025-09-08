@@ -50,11 +50,12 @@ public static class DeleteToDoListCommandHandler
         await toDoListRepository.DeleteAsync(toDoListId, cancellationToken);
         await toDoListRepository.SaveChangesAsync(cancellationToken);
 
-        return new DeleteToDoListResult(
-            toDoList.Id.Value,
-            toDoList.UserId.Value,
-            deletedAt
-        );
+        return new DeleteToDoListResult
+        {
+            ToDoListId = toDoList.Id.Value,
+            UserId = toDoList.UserId.Value,
+            DeletedAt = deletedAt
+        };
     }
 
     private static Result<(ToDoListId toDoListId, UserId userId)> ValidateIds(DeleteToDoListCommand command)

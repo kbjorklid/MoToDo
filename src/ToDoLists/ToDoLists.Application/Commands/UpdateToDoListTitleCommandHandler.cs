@@ -50,11 +50,12 @@ public static class UpdateToDoListTitleCommandHandler
         await toDoListRepository.UpdateAsync(toDoList, cancellationToken);
         await toDoListRepository.SaveChangesAsync(cancellationToken);
 
-        return new UpdateToDoListTitleResult(
-            toDoList.Id.Value,
-            toDoList.Title.Value,
-            toDoList.UpdatedAt ?? now
-        );
+        return new UpdateToDoListTitleResult
+        {
+            ToDoListId = toDoList.Id.Value,
+            Title = toDoList.Title.Value,
+            UpdatedAt = toDoList.UpdatedAt ?? now
+        };
     }
 
     private static Result<(ToDoListId toDoListId, UserId userId)> ValidateIds(UpdateToDoListTitleCommand command)

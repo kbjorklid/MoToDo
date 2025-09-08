@@ -34,12 +34,13 @@ public static class AddUserCommandHandler
         await userRepository.AddAsync(user);
         await userRepository.SaveChangesAsync();
 
-        return new AddUserResult(
-            user.Id.Value,
-            user.Email.Value.Address,
-            user.UserName.Value,
-            user.CreatedAt
-        );
+        return new AddUserResult
+        {
+            UserId = user.Id.Value,
+            Email = user.Email.Value.Address,
+            UserName = user.UserName.Value,
+            CreatedAt = user.CreatedAt
+        };
     }
 
     private static async Task<Result> ValidateUserUniqueness(IUserRepository userRepository, User user)

@@ -270,6 +270,61 @@ Multiple optional parameters (3+), complex validation, reusable across repositor
 - Commands and Queries should be implemented as immutable `record` types.
 - Repository interfaces should be defined in the Domain layer and implemented in the Infrastructure layer.
 
+# Contract Types (Commands, Queries, Results)
+
+## Property Initialization Pattern
+
+Contract types in `*.Contracts` projects MUST use `{get; init;}` properties instead of constructor parameters to avoid parameter order confusion and improve code readability.
+
+### Commands and Queries
+- Use `required` modifier for mandatory properties
+- Use `{get; init;}` for all properties
+- Initialize objects with explicit property names
+
+```csharp
+// ✅ Good - Self-documenting with property names
+public sealed record RemoveToDoCommand
+{
+    public required string ToDoListId { get; init; }
+    public required string ToDoId { get; init; }
+    public required string UserId { get; init; }
+}
+
+// Usage
+var command = new RemoveToDoCommand
+{
+    ToDoListId = listId,
+    ToDoId = todoId, 
+    UserId = userId
+};
+
+// ❌ Avoid - Parameter order confusion
+public sealed record RemoveToDoCommand(string ToDoListId, string ToDoId, string UserId);
+var command = new RemoveToDoCommand(listId, todoId, userId); // Easy to mix up parameters
+```
+
+### Result Types
+- DO NOT use `required` modifier (to avoid JSON deserialization issues)
+- Provide default values for string properties: `= string.Empty`
+- Use `{get; init;}` for all properties
+
+```csharp
+// ✅ Good - Result type without required
+public sealed record AddUserResult
+{
+    public Guid UserId { get; init; }
+    public string Email { get; init; } = string.Empty;
+    public string UserName { get; init; } = string.Empty; 
+    public DateTime CreatedAt { get; init; }
+}
+```
+
+### Benefits
+- **Parameter Safety**: Eliminates risk of mixing up parameter order
+- **Self-Documenting**: Property names are explicit during object creation
+- **Future-Proof**: Adding new properties doesn't break existing code
+- **IntelliSense Support**: IDE shows property names during initialization
+
 # Code documentation
 
 - Add XML documentation for classes

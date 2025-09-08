@@ -50,12 +50,13 @@ public static class RemoveToDoCommandHandler
         await toDoListRepository.UpdateAsync(toDoList, cancellationToken);
         await toDoListRepository.SaveChangesAsync(cancellationToken);
 
-        return new RemoveToDoResult(
-            toDoListId.Value,
-            toDoId.Value,
-            userId.Value,
-            removedAt
-        );
+        return new RemoveToDoResult
+        {
+            ToDoListId = toDoListId.Value,
+            ToDoId = toDoId.Value,
+            UserId = userId.Value,
+            RemovedAt = removedAt
+        };
     }
 
     private static Result<(ToDoListId toDoListId, ToDoId toDoId, UserId userId)> ValidateIds(RemoveToDoCommand command)

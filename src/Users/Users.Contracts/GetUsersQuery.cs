@@ -3,15 +3,30 @@ namespace Users.Contracts;
 /// <summary>
 /// Query to retrieve a paginated list of users with optional filtering and sorting.
 /// </summary>
-/// <param name="Page">The page number to retrieve (1-based).</param>
-/// <param name="Limit">The number of items per page.</param>
-/// <param name="Sort">Sort field and direction (format: field or -field for descending).</param>
-/// <param name="Email">Filter users by email address (partial match).</param>
-/// <param name="UserName">Filter users by username (partial match).</param>
-public sealed record GetUsersQuery(
-    int? Page = null,
-    int? Limit = null,
-    string? Sort = null,
-    string? Email = null,
-    string? UserName = null
-);
+public sealed record GetUsersQuery
+{
+    /// <summary>
+    /// The page number to retrieve (1-based).
+    /// </summary>
+    public int? Page { get; init; }
+
+    /// <summary>
+    /// The number of items per page.
+    /// </summary>
+    public int? Limit { get; init; }
+
+    /// <summary>
+    /// Sort field and direction (format: field or -field for descending).
+    /// </summary>
+    public string? Sort { get; init; }
+
+    /// <summary>
+    /// Filter users by email address (partial match).
+    /// </summary>
+    public string? Email { get; init; }
+
+    /// <summary>
+    /// Filter users by username (partial match).
+    /// </summary>
+    public string? UserName { get; init; }
+}
