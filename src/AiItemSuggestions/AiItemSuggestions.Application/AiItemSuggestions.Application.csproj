@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <ItemGroup>
+    <ProjectReference Include="..\AiItemSuggestions.Domain\AiItemSuggestions.Domain.csproj" />
+    <ProjectReference Include="..\AiItemSuggestions.Contracts\AiItemSuggestions.Contracts.csproj" />
+    <ProjectReference Include="..\..\BuildingBlocks\Base.Application\Base.Application.csproj" />
+  </ItemGroup>
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+</Project>
