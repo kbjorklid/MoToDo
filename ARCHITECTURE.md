@@ -31,7 +31,34 @@ Every module in the monolith internally adheres to the principles of Clean Archi
 
 Domain and Application may define port interfaces. The Infrastructure layer then defines the implementations for these ports.
 
-For example, Application layer may define `IEmailSenderPort`, and the infrastructure layer might have a concrete class implementing the port interface, perhaps `SendGridAdapter`.
+#### Port and Adapter Naming Convention
+
+Following the Ports and Adapters (Hexagonal Architecture) pattern:
+
+- **Port interfaces** MUST follow the naming pattern: `I{Purpose}Port` (e.g., `IEmailSenderPort`, `IToDoListDataPort`)
+- **Adapter implementations** MUST follow the naming pattern: `{Technology/Provider}Adapter` (e.g., `SendGridAdapter`, `ToDoListDataAdapter`)
+
+This naming convention makes the architectural intent clear:
+- **Ports** define the interface for external communication (what the application needs)
+- **Adapters** provide the concrete implementation for specific technologies (how it's implemented)
+
+**Example:**
+```csharp
+// Port interface in Application layer
+public interface IEmailSenderPort
+{
+    Task SendEmailAsync(string to, string subject, string body);
+}
+
+// Adapter implementation in Infrastructure layer  
+internal sealed class SendGridAdapter : IEmailSenderPort
+{
+    public async Task SendEmailAsync(string to, string subject, string body)
+    {
+        // SendGrid-specific implementation
+    }
+}
+```
 
 ### CQRS (Command Query Responsibility Segregation)
 

@@ -258,8 +258,8 @@ Multiple optional parameters (3+), complex validation, reusable across repositor
 - Domain Services MUST end with `Service` suffix.
 - Repository interfaces MUST end with `Repository` suffix.
 - Repository implementations MUST end with `Repository` suffix.
-- Port interfaces MUST end with `Port` Suffix.
-- Adapter implementations (that implement Port interfaces) MUST end with `Adapter` suffix.
+- Port interfaces MUST start with `I` prefix and end with `Port` suffix (e.g., `IEmailSenderPort`, `IToDoListDataPort`).
+- Adapter implementations (that implement Port interfaces) MUST end with `Adapter` suffix (e.g., `SendGridAdapter`, `ToDoListDataAdapter`).
 - .cs file names should be same as the type defined within them (e.g. `UserRegisteredEvent` -> `UserRegisteredEvent.cs`)
 
 # Inheritance Conventions
@@ -334,7 +334,6 @@ public sealed record AddUserResult
   - Do document methods of Domain Services
 - DO NOT add inline (`//`) comments. This includes step-by-step explanatory comments (e.g., `// Parse and validate the userId`, `// Get the user`, `// Save changes`). The code should be self-explanatory through clear method and variable names. Exceptions:
   - Do add `// Arrange`, `// Act` and `// Assert` comments to tests.
-- NEVER remove useful pre-existing documentation, even when it is against the guidelines above.
 
 # Important base and utility classes
 

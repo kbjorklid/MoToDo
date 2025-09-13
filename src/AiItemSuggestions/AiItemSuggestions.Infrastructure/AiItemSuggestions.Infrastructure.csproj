@@ -3,6 +3,11 @@
   <ItemGroup>
     <ProjectReference Include="..\AiItemSuggestions.Application\AiItemSuggestions.Application.csproj" />
     <ProjectReference Include="..\..\BuildingBlocks\Base.Infrastructure\Base.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\ToDoLists\ToDoLists.Contracts\ToDoLists.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WolverineFx" />
   </ItemGroup>
 
   <PropertyGroup>
