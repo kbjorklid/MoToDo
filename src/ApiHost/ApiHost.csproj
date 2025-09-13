@@ -26,6 +26,7 @@
     <ProjectReference Include="..\ToDoLists\ToDoLists.Infrastructure\ToDoLists.Infrastructure.csproj" />
     <ProjectReference Include="..\AiItemSuggestions\AiItemSuggestions.Application\AiItemSuggestions.Application.csproj" />
     <ProjectReference Include="..\AiItemSuggestions\AiItemSuggestions.Contracts\AiItemSuggestions.Contracts.csproj" />
+    <ProjectReference Include="..\AiItemSuggestions\AiItemSuggestions.Infrastructure\AiItemSuggestions.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>

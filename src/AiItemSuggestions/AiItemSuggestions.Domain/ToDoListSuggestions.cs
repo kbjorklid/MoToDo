@@ -24,7 +24,7 @@ public sealed class ToDoListSuggestions : AggregateRoot<ToDoListSuggestionsId>
     /// <summary>
     /// Gets a read-only view of the suggested items in this list.
     /// </summary>
-    public IReadOnlyList<SuggestedItem> GetSuggestedItems() => _suggestedItems.AsReadOnly();
+    public IReadOnlyList<SuggestedItem> SuggestedItems => _suggestedItems.AsReadOnly();
 
     /// <summary>
     /// Gets the number of suggested items in this list.
@@ -80,7 +80,6 @@ public sealed class ToDoListSuggestions : AggregateRoot<ToDoListSuggestionsId>
             return new Error(Codes.SuggestedItemNotFound, "The specified suggested item was not found in this list.", ErrorType.NotFound);
 
         _suggestedItems.Remove(suggestedItem);
-
         return Result.Success();
     }
 
@@ -96,7 +95,6 @@ public sealed class ToDoListSuggestions : AggregateRoot<ToDoListSuggestionsId>
             return new Error(Codes.ToDoItemNotFound, "No suggested item was found for the specified todo item.", ErrorType.NotFound);
 
         _suggestedItems.Remove(suggestedItem);
-
         return Result.Success();
     }
 

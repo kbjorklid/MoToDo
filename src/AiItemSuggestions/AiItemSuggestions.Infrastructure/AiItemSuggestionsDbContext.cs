@@ -1,35 +1,36 @@
+using AiItemSuggestions.Domain;
+using AiItemSuggestions.Infrastructure.Configurations;
 using Base.Domain;
 using Microsoft.EntityFrameworkCore;
-using ToDoLists.Domain;
-using ToDoLists.Infrastructure.Configurations;
 using Wolverine;
 
-namespace ToDoLists.Infrastructure;
+namespace AiItemSuggestions.Infrastructure;
 
 /// <summary>
-/// Database context for the ToDoLists module, configured for PostgreSQL with the 'ToDoLists' schema.
+/// Database context for the AiItemSuggestions module, configured for PostgreSQL with the 'AiItemSuggestions' schema.
+/// Handles domain event publishing through Wolverine message bus integration.
 /// </summary>
-public sealed class ToDoListsDbContext : DbContext
+public sealed class AiItemSuggestionsDbContext : DbContext
 {
     private const int NoChanges = 0;
     private readonly IMessageBus? _messageBus;
 
-    public ToDoListsDbContext(DbContextOptions<ToDoListsDbContext> options, IMessageBus? messageBus = null) : base(options)
+    public AiItemSuggestionsDbContext(DbContextOptions<AiItemSuggestionsDbContext> options, IMessageBus? messageBus = null) : base(options)
     {
         _messageBus = messageBus;
     }
 
-    public DbSet<ToDoList> ToDoLists => Set<ToDoList>();
+    public DbSet<ToDoListSuggestions> ToDoListSuggestions => Set<ToDoListSuggestions>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         base.OnModelCreating(modelBuilder);
 
         // Apply entity configurations
-        modelBuilder.ApplyConfiguration(new ToDoListEntityConfiguration());
+        modelBuilder.ApplyConfiguration(new ToDoListSuggestionsEntityConfiguration());
 
         // Set default schema for this module as per design plan
-        modelBuilder.HasDefaultSchema("ToDoLists");
+        modelBuilder.HasDefaultSchema("AiItemSuggestions");
     }
 
     public override async Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
@@ -46,7 +47,7 @@ public sealed class ToDoListsDbContext : DbContext
     private List<IDomainEvent> GetUnpublishedDomainEvents()
     {
         return ChangeTracker
-            .Entries<AggregateRoot<ToDoListId>>()
+            .Entries<AggregateRoot<ToDoListSuggestionsId>>()
             .Where(entry => entry.Entity.GetDomainEvents().Count != 0)
             .SelectMany(entry => entry.Entity.GetDomainEvents())
             .ToList();
@@ -71,11 +72,11 @@ public sealed class ToDoListsDbContext : DbContext
 
     private void ClearDomainEventsFromAggregateRoots()
     {
-        IEnumerable<AggregateRoot<ToDoListId>> aggregateRoots = ChangeTracker
-            .Entries<AggregateRoot<ToDoListId>>()
+        IEnumerable<AggregateRoot<ToDoListSuggestionsId>> aggregateRoots = ChangeTracker
+            .Entries<AggregateRoot<ToDoListSuggestionsId>>()
             .Select(entry => entry.Entity);
 
-        foreach (AggregateRoot<ToDoListId> aggregateRoot in aggregateRoots)
+        foreach (AggregateRoot<ToDoListSuggestionsId> aggregateRoot in aggregateRoots)
         {
             aggregateRoot.ClearDomainEvents();
         }

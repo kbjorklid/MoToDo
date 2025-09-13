@@ -1,11 +1,10 @@
+using AiItemSuggestions.Infrastructure;
 using ToDoLists.Infrastructure;
 using Users.Infrastructure;
 using Wolverine;
 
 WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
 builder.Services.AddSwaggerGen();
 builder.Services.AddProblemDetails();
@@ -19,16 +18,16 @@ string connectionString = builder.Configuration.GetConnectionString("DefaultConn
 // Register module services  
 builder.Services.AddUsersInfrastructureServices(connectionString);
 builder.Services.AddToDoListsInfrastructureServices(connectionString);
-
+builder.Services.AddAiItemSuggestionsInfrastructureServices(connectionString);
 
 // Configure Wolverine once for all modules
 builder.Host.UseWolverine(opts =>
 {
-    // Auto-discover message handlers in both modules
+    // Auto-discover message handlers in all modules
     opts.Discovery.IncludeAssembly(typeof(Users.Application.AssemblyMarker).Assembly);
     opts.Discovery.IncludeAssembly(typeof(ToDoLists.Application.AssemblyMarker).Assembly);
+    opts.Discovery.IncludeAssembly(typeof(AiItemSuggestions.Application.AssemblyMarker).Assembly);
 
-    // Allow full messaging capabilities for domain event publishing
     // opts.Durability.Mode = DurabilityMode.MediatorOnly;
 
     if (builder.Environment.IsDevelopment())

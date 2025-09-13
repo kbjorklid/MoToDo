@@ -22,6 +22,7 @@
     <!-- Code analysis packages -->
     <PackageVersion Include="Microsoft.CodeAnalysis.Common" Version="4.14.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.MSBuild" Version="4.14.0" />
+    <PackageVersion Include="Microsoft.CodeAnalysis.Workspaces.Common" Version="4.14.0" />
     <!-- Application framework packages -->
     <PackageVersion Include="WolverineFx" Version="4.10.0" />
     <PackageVersion Include="WolverineFx.Http" Version="4.10.0" />
