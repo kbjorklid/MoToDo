@@ -7,7 +7,7 @@ namespace AiItemSuggestions.Application.Ports;
 /// Port interface for generating AI-powered todo item suggestions based on existing list content.
 /// Provides suggestions that complement the existing items in a todo list.
 /// </summary>
-public interface IItemSuggestionsService
+public interface IItemSuggestionsPort
 {
     /// <summary>
     /// Generates AI-powered suggestions for new todo items based on the existing list content.

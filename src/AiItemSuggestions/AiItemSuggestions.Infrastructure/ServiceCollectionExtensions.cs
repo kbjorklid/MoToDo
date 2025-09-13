@@ -25,7 +25,7 @@ public static class ServiceCollectionExtensions
 
         services.AddScoped<IToDoListSuggestionsRepository, ToDoListSuggestionsRepository>();
         services.AddScoped<IToDoListDataPort, ToDoListDataAdapter>();
-        services.AddScoped<IItemSuggestionsService, BogusItemSuggestionsService>();
+        services.AddScoped<IItemSuggestionsPort, BogusItemSuggestionsAdapter>();
 
         return services;
     }

@@ -8,12 +8,12 @@ namespace AiItemSuggestions.Infrastructure;
 /// Bogus implementation of the item suggestions service that provides hardcoded suggestions
 /// without actually using an LLM. This is useful for development, testing, and demonstration purposes.
 /// </summary>
-internal sealed class BogusItemSuggestionsService : IItemSuggestionsService
+internal sealed class BogusItemSuggestionsAdapter : IItemSuggestionsPort
 {
     public static class Codes
     {
-        public const string InvalidCount = "BogusItemSuggestionsService.InvalidCount";
-        public const string NullSnapshot = "BogusItemSuggestionsService.NullSnapshot";
+        public const string InvalidCount = "BogusItemSuggestionsAdapter.InvalidCount";
+        public const string NullSnapshot = "BogusItemSuggestionsAdapter.NullSnapshot";
     }
 
     private static class Constants
