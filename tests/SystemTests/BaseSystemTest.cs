@@ -1,5 +1,7 @@
 using System.Text;
 using System.Text.Json;
+using AiItemSuggestions.Application.Ports;
+using AiItemSuggestions.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.EntityFrameworkCore;
@@ -7,6 +9,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Time.Testing;
+using NSubstitute;
 using Testcontainers.PostgreSql;
 using ToDoLists.Infrastructure;
 using Users.Infrastructure;
@@ -19,6 +22,9 @@ namespace SystemTests;
 /// </summary>
 public class DatabaseFixture : IAsyncLifetime
 {
+    private const string TestDatabaseName = "pertified";
+    private static readonly DateTimeOffset TestBaseTime = new(2024, 1, 1, 12, 0, 0, TimeSpan.Zero);
+
     public PostgreSqlContainer DbContainer { get; private set; } = null!;
     public WebApplicationFactory<Program> WebAppFactory { get; private set; } = null!;
     public FakeTimeProvider FakeTimeProvider { get; private set; } = null!;
@@ -29,7 +35,7 @@ public class DatabaseFixture : IAsyncLifetime
         DbContainer = new PostgreSqlBuilder()
             .WithImage("postgres:16")
             .WithLogger(NullLogger.Instance)
-            .WithDatabase("pertified")
+            .WithDatabase(TestDatabaseName)
             .WithUsername("postgres")
             .WithPassword("postgres")
             .WithCleanUp(true)
@@ -42,7 +48,7 @@ public class DatabaseFixture : IAsyncLifetime
         string containerConnectionString = DbContainer.GetConnectionString();
 
         // Initialize FakeTimeProvider with a fixed test time for deterministic behavior
-        FakeTimeProvider = new FakeTimeProvider(new DateTimeOffset(2024, 1, 1, 12, 0, 0, TimeSpan.Zero));
+        FakeTimeProvider = new FakeTimeProvider(TestBaseTime);
 
         // Create WebApplicationFactory after container is started
         WebAppFactory = new WebApplicationFactory<Program>()
@@ -62,7 +68,14 @@ public class DatabaseFixture : IAsyncLifetime
                     services.Configure<WolverineOptions>(opts =>
                     {
                         opts.Durability.Mode = DurabilityMode.Solo;
+                        // Ensure local queues are used for testing
+                        opts.LocalQueue("local");
                     });
+
+                    // Replace real AI suggestions port with mock for testing
+                    // The mock will be configured by individual tests
+                    services.Remove(services.Single(descriptor => descriptor.ServiceType == typeof(IItemSuggestionsPort)));
+                    services.AddSingleton<IItemSuggestionsPort>(_ => MockItemSuggestionsPort);
                 });
 
                 builder.ConfigureLogging(logging =>
@@ -80,14 +93,21 @@ public class DatabaseFixture : IAsyncLifetime
         using IServiceScope scope = WebAppFactory.Services.CreateScope();
         UsersDbContext usersDbContext = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
         ToDoListsDbContext todoListsDbContext = scope.ServiceProvider.GetRequiredService<ToDoListsDbContext>();
+        AiItemSuggestionsDbContext aiItemSuggestionsDbContext = scope.ServiceProvider.GetRequiredService<AiItemSuggestionsDbContext>();
         await usersDbContext.Database.MigrateAsync();
         await todoListsDbContext.Database.MigrateAsync();
+        await aiItemSuggestionsDbContext.Database.MigrateAsync();
     }
 
     public Task DisposeAsync()
     {
         return Task.CompletedTask;
     }
+
+    /// <summary>
+    /// Mock for AI suggestions port that can be configured by individual tests.
+    /// </summary>
+    public static IItemSuggestionsPort MockItemSuggestionsPort { get; } = Substitute.For<IItemSuggestionsPort>();
 }
 
 /// <summary>
@@ -115,12 +135,16 @@ public abstract class BaseSystemTest : IClassFixture<DatabaseFixture>
         using IServiceScope scope = WebAppFactory.Services.CreateScope();
         UsersDbContext usersDbContext = scope.ServiceProvider.GetRequiredService<UsersDbContext>();
         ToDoListsDbContext todoListsDbContext = scope.ServiceProvider.GetRequiredService<ToDoListsDbContext>();
+        AiItemSuggestionsDbContext aiItemSuggestionsDbContext = scope.ServiceProvider.GetRequiredService<AiItemSuggestionsDbContext>();
 
         // Clear Users table
         await usersDbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"Users\".\"Users\" CASCADE");
 
         // Clear ToDoLists table
         await todoListsDbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"ToDoLists\".\"ToDoLists\" CASCADE");
+
+        // Clear AiItemSuggestions table
+        await aiItemSuggestionsDbContext.Database.ExecuteSqlRawAsync("TRUNCATE TABLE \"AiItemSuggestions\".\"ToDoListSuggestions\" CASCADE");
     }
 
     /// <summary>

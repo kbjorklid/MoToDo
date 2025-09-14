@@ -1,3 +1,4 @@
+using AiItemSuggestions.Application;
 using AiItemSuggestions.Infrastructure;
 using ToDoLists.Infrastructure;
 using Users.Infrastructure;
@@ -18,6 +19,7 @@ string connectionString = builder.Configuration.GetConnectionString("DefaultConn
 // Register module services  
 builder.Services.AddUsersInfrastructureServices(connectionString);
 builder.Services.AddToDoListsInfrastructureServices(connectionString);
+builder.Services.AddAiItemSuggestionsApplicationServices();
 builder.Services.AddAiItemSuggestionsInfrastructureServices(connectionString);
 
 // Configure Wolverine once for all modules

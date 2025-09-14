@@ -4,6 +4,11 @@
     <ProjectReference Include="..\AiItemSuggestions.Domain\AiItemSuggestions.Domain.csproj" />
     <ProjectReference Include="..\AiItemSuggestions.Contracts\AiItemSuggestions.Contracts.csproj" />
     <ProjectReference Include="..\..\BuildingBlocks\Base.Application\Base.Application.csproj" />
+    <ProjectReference Include="..\..\ToDoLists\ToDoLists.Contracts\ToDoLists.Contracts.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="WolverineFx" />
   </ItemGroup>
 
   <PropertyGroup>
