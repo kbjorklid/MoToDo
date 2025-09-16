@@ -12,8 +12,8 @@ namespace SystemTests;
 /// </summary>
 public class AiItemSuggestionsSystemTests : BaseSystemTest
 {
-    private const int WolverineProcessingDelayMs = 3000;
-    private const int BackgroundProcessingDelayMs = 1000;
+    private static readonly TimeSpan DefaultTimeout = TimeSpan.FromSeconds(5);
+    private static readonly TimeSpan PollInterval = TimeSpan.FromMilliseconds(100);
 
     public AiItemSuggestionsSystemTests(DatabaseFixture databaseFixture) : base(databaseFixture)
     {
@@ -33,10 +33,11 @@ public class AiItemSuggestionsSystemTests : BaseSystemTest
         _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Buy bread");
 
         // Act - Add the third item which should trigger AI suggestions
-        AddToDoResult thirdItem = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Buy eggs");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Buy eggs");
 
-        // Wait for Wolverine to process domain events in Solo mode
-        await Task.Delay(WolverineProcessingDelayMs);
+        // Wait for Wolverine to process domain events and generate AI suggestions
+        await CreatePollingHelper(listId, todoList.UserId)
+            .WaitUntilTodoCountAtAsync(6);
 
         // Assert - Verify that the list now contains 6 items (3 original + 3 AI suggestions)
         HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={todoList.UserId}");
@@ -46,23 +47,15 @@ public class AiItemSuggestionsSystemTests : BaseSystemTest
         Assert.Equal(6, result.TodoCount);
         Assert.Equal(6, result.Todos.Length);
 
-        // Verify the original 3 items are present
         Assert.Contains(result.Todos, t => t.Title == "Buy milk");
         Assert.Contains(result.Todos, t => t.Title == "Buy bread");
         Assert.Contains(result.Todos, t => t.Title == "Buy eggs");
-
-        // Verify that 3 additional AI-suggested items were added
-        string[] originalTitles = new[] { "Buy milk", "Buy bread", "Buy eggs" };
-        var aiSuggestedItems = result.Todos.Where(t => !originalTitles.Contains(t.Title)).ToList();
-        Assert.Equal(3, aiSuggestedItems.Count);
-
-        // Verify the mock AI suggestions have the expected titles
         Assert.Contains(result.Todos, t => t.Title == "AI Suggestion 1");
         Assert.Contains(result.Todos, t => t.Title == "AI Suggestion 2");
         Assert.Contains(result.Todos, t => t.Title == "AI Suggestion 3");
 
-        // Verify all AI suggestions are not completed
-        foreach (ToDoApiDto? suggestion in aiSuggestedItems)
+        IEnumerable<ToDoApiDto> aiSuggestions = result.Todos.Where(t => t.Title.StartsWith("AI Suggestion "));
+        foreach (ToDoApiDto suggestion in aiSuggestions)
         {
             Assert.False(suggestion.IsCompleted);
             Assert.NotEqual(Guid.Empty.ToString(), suggestion.Id);
@@ -80,8 +73,10 @@ public class AiItemSuggestionsSystemTests : BaseSystemTest
         _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Task 1");
         _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Task 2");
 
-        // Allow time for any potential background processing
-        await Task.Delay(BackgroundProcessingDelayMs);
+        // Verify no background processing occurs - count should remain at 2
+        ToDoListPollingHelper pollingHelper = CreatePollingHelper(listId, todoList.UserId);
+        await pollingHelper.WaitUntilTodoCountAtAsync(2);
+        await pollingHelper.EnsureTodoCountDoesNotChangeAsync();
 
         // Assert - Verify that the list contains exactly 2 items (no AI suggestions added)
         HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={todoList.UserId}");
@@ -111,13 +106,15 @@ public class AiItemSuggestionsSystemTests : BaseSystemTest
         _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Implementation");
 
         // Wait for initial AI suggestions to be processed
-        await Task.Delay(3000);
+        await CreatePollingHelper(listId, todoList.UserId).WaitUntilTodoCountAtAsync(6);
 
         // Act - Add the fourth original item (should result in 7 total items)
         _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Testing");
 
-        // Allow time for any potential background processing
-        await Task.Delay(BackgroundProcessingDelayMs);
+        // Verify no additional AI suggestions are generated after the fourth item
+        ToDoListPollingHelper helper = CreatePollingHelper(listId, todoList.UserId);
+        await helper.WaitUntilTodoCountAtAsync(7);
+        await helper.EnsureTodoCountDoesNotChangeAsync();
 
         // Assert - Verify that the list contains exactly 7 items (4 original + 3 AI suggestions, no additional AI suggestions)
         HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={todoList.UserId}");
@@ -153,8 +150,8 @@ public class AiItemSuggestionsSystemTests : BaseSystemTest
         _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Code review");
         AddToDoResult thirdItem = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Update docs");
 
-        // Wait for Wolverine to process domain events in Solo mode
-        await Task.Delay(WolverineProcessingDelayMs);
+        // Wait for Wolverine to process domain events and generate AI suggestions
+        await CreatePollingHelper(listId, todoList.UserId).WaitUntilTodoCountAtAsync(6);
 
         // Verify initial AI suggestions were generated (should have 6 total items)
         HttpResponseMessage initialResponse = await HttpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={todoList.UserId}");
@@ -165,8 +162,10 @@ public class AiItemSuggestionsSystemTests : BaseSystemTest
         _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Deploy to staging");
         _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "User testing");
 
-        // Allow time for any potential background processing
-        await Task.Delay(BackgroundProcessingDelayMs);
+        // Verify no additional AI suggestions are generated
+        ToDoListPollingHelper helper = CreatePollingHelper(listId, todoList.UserId);
+        await helper.WaitUntilTodoCountAtAsync(8);
+        await helper.EnsureTodoCountDoesNotChangeAsync();
 
         // Assert - Verify that no additional AI suggestions were generated
         HttpResponseMessage finalResponse = await HttpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={todoList.UserId}");
@@ -191,15 +190,14 @@ public class AiItemSuggestionsSystemTests : BaseSystemTest
         Guid userId = todoList.UserId;
 
         // Act - Add exactly 3 items to trigger AI suggestions
-        AddToDoResult[] originalTodos = new[]
-        {
+        AddToDoResult[] originalTodos =
+        [
             await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Original task 1"),
             await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Original task 2"),
             await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Original task 3")
-        };
+        ];
 
-        // Wait for Wolverine to process domain events in Solo mode
-        await Task.Delay(WolverineProcessingDelayMs);
+        await CreatePollingHelper(listId, userId).WaitUntilTodoCountAtAsync(6);
 
         // Assert - Comprehensive verification of the complete state
         HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={userId}");
@@ -255,30 +253,148 @@ public class AiItemSuggestionsSystemTests : BaseSystemTest
     /// </summary>
     private static void ConfigureMockToReturnSuggestions(params string[] suggestionTitles)
     {
-        // Clear any previous configurations
-        DatabaseFixture.MockItemSuggestionsPort.ClearReceivedCalls();
+        ClearPreviousMockConfigurations();
+        ConfigureMockToReturnSpecificSuggestions(suggestionTitles);
+    }
 
-        // Configure mock to return the specified suggestions
+    private static void ClearPreviousMockConfigurations()
+    {
+        DatabaseFixture.MockItemSuggestionsPort.ClearReceivedCalls();
+    }
+
+    private static void ConfigureMockToReturnSpecificSuggestions(string[] suggestionTitles)
+    {
         DatabaseFixture.MockItemSuggestionsPort.GenerateSuggestionsAsync(Arg.Any<ToDoListSnapshot>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
             .Returns(callInfo =>
             {
                 int requestedCount = callInfo.ArgAt<int>(1);
-                var suggestions = new List<SuggestedItemTitle>();
+                IReadOnlyList<SuggestedItemTitle> suggestions = CreateSuggestionsFromTitles(suggestionTitles, requestedCount);
+                return Task.FromResult(Result<IReadOnlyList<SuggestedItemTitle>>.Success(suggestions));
+            });
+    }
 
-                // Return up to the requested count or available titles, whichever is smaller
-                int countToReturn = Math.Min(requestedCount, suggestionTitles.Length);
+    private static IReadOnlyList<SuggestedItemTitle> CreateSuggestionsFromTitles(string[] suggestionTitles, int requestedCount)
+    {
+        var suggestions = new List<SuggestedItemTitle>();
+        int countToReturn = Math.Min(requestedCount, suggestionTitles.Length);
 
-                for (int i = 0; i < countToReturn; i++)
+        for (int i = 0; i < countToReturn; i++)
+        {
+            Result<SuggestedItemTitle> titleResult = SuggestedItemTitle.Create(suggestionTitles[i]);
+            if (titleResult.IsSuccess)
+            {
+                suggestions.Add(titleResult.Value);
+            }
+        }
+
+        return suggestions.AsReadOnly();
+    }
+
+    /// <summary>
+    /// Helper class for polling todo list state changes during system tests.
+    /// </summary>
+    private class ToDoListPollingHelper(
+        HttpClient httpClient,
+        Guid listId,
+        Guid userId,
+        Func<HttpResponseMessage, Task<ToDoListDetailApiResponse>> fromJsonAsync)
+    {
+        private int? _lastObservedCount;
+
+        /// <summary>
+        /// Waits until the todo list reaches the expected count.
+        /// </summary>
+        public async Task<ToDoListPollingHelper> WaitUntilTodoCountAtAsync(int expectedCount, TimeSpan? timeout = null)
+        {
+            timeout ??= DefaultTimeout;
+            DateTime endTime = DateTime.UtcNow.Add(timeout.Value);
+
+            while (DateTime.UtcNow < endTime)
+            {
+                HttpResponseMessage response = await httpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={userId}");
+
+                if (response.StatusCode == HttpStatusCode.OK)
                 {
-                    Result<SuggestedItemTitle> titleResult = SuggestedItemTitle.Create(suggestionTitles[i]);
-                    if (titleResult.IsSuccess)
+                    ToDoListDetailApiResponse result = await fromJsonAsync(response);
+
+                    if (result.TodoCount == expectedCount)
                     {
-                        suggestions.Add(titleResult.Value);
+                        _lastObservedCount = expectedCount; // Store the count for potential chaining
+                        return this; // Success - found expected count
                     }
                 }
 
-                return Task.FromResult<Result<IReadOnlyList<SuggestedItemTitle>>>(suggestions.AsReadOnly());
-            });
+                await Task.Delay(PollInterval);
+            }
+
+            // Get final state for error message
+            HttpResponseMessage finalResponse = await httpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={userId}");
+            if (finalResponse.StatusCode == HttpStatusCode.OK)
+            {
+                ToDoListDetailApiResponse finalResult = await fromJsonAsync(finalResponse);
+                Assert.Fail($"Timeout waiting for todo count. Expected: {expectedCount}, Actual: {finalResult.TodoCount}");
+            }
+            else
+            {
+                Assert.Fail($"Timeout waiting for todo count. Expected: {expectedCount}, Response: {finalResponse.StatusCode}");
+            }
+
+            return this; // This line will never be reached due to Assert.Fail above
+        }
+
+        /// <summary>
+        /// Ensures that the todo count does not change during the specified timeout period.
+        /// Used for negative test cases where we expect no background processing to occur.
+        /// If called after WaitUntilTodoCountAtAsync, uses the previously observed count as the baseline.
+        /// </summary>
+        public async Task<ToDoListPollingHelper> EnsureTodoCountDoesNotChangeAsync(TimeSpan? timeout = null)
+        {
+            timeout ??= TimeSpan.FromMilliseconds(500);
+
+            int initialCount;
+            if (_lastObservedCount.HasValue)
+            {
+                // Use the count from the previous WaitUntilTodoCountAtAsync call
+                initialCount = _lastObservedCount.Value;
+            }
+            else
+            {
+                // Get current count if no previous count is stored
+                HttpResponseMessage initialResponse = await httpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={userId}");
+                Assert.Equal(HttpStatusCode.OK, initialResponse.StatusCode);
+                ToDoListDetailApiResponse initialResult = await fromJsonAsync(initialResponse);
+                initialCount = initialResult.TodoCount;
+            }
+
+            DateTime endTime = DateTime.UtcNow.Add(timeout.Value);
+
+            while (DateTime.UtcNow < endTime)
+            {
+                HttpResponseMessage response = await httpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={userId}");
+
+                if (response.StatusCode == HttpStatusCode.OK)
+                {
+                    ToDoListDetailApiResponse result = await fromJsonAsync(response);
+
+                    if (result.TodoCount != initialCount)
+                    {
+                        Assert.Fail($"Expected todo count to remain at {initialCount}, but it changed to {result.TodoCount}");
+                    }
+                }
+
+                await Task.Delay(PollInterval);
+            }
+
+            return this; // Success - count remained stable
+        }
+    }
+
+    /// <summary>
+    /// Creates a polling helper for the specified todo list.
+    /// </summary>
+    private ToDoListPollingHelper CreatePollingHelper(Guid listId, Guid userId)
+    {
+        return new ToDoListPollingHelper(HttpClient, listId, userId, FromJsonAsync<ToDoListDetailApiResponse>);
     }
 
 }
