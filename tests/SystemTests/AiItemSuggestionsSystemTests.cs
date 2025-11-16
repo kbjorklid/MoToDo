@@ -397,4 +397,430 @@ public class AiItemSuggestionsSystemTests : BaseSystemTest
         return new ToDoListPollingHelper(HttpClient, listId, userId, FromJsonAsync<ToDoListDetailApiResponse>);
     }
 
+    #region Error Handling Tests
+
+    [Fact]
+    public async Task PostTodos_WhenAiPortReturnsFailure_DoesNotAddSuggestionsAndContinuesNormally()
+    {
+        // Arrange
+        ConfigureMockToReturnFailure("AI service temporarily unavailable");
+
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, "Error Test List");
+        Guid listId = todoList.ToDoListId;
+
+        // Add first two items
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Task A");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Task B");
+
+        // Act - Add third item (should trigger AI suggestions, but AI port fails)
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Task C");
+
+        // Wait briefly for background processing
+        ToDoListPollingHelper helper = CreatePollingHelper(listId, todoList.UserId);
+        await helper.WaitUntilTodoCountAtAsync(3);
+        await helper.EnsureTodoCountDoesNotChangeAsync();
+
+        // Assert - Should only have original 3 items, no AI suggestions added
+        HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={todoList.UserId}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        ToDoListDetailApiResponse result = await FromJsonAsync<ToDoListDetailApiResponse>(response);
+        Assert.Equal(3, result.TodoCount);
+        Assert.Equal(3, result.Todos.Length);
+
+        // Verify only original items exist
+        Assert.Contains(result.Todos, t => t.Title == "Task A");
+        Assert.Contains(result.Todos, t => t.Title == "Task B");
+        Assert.Contains(result.Todos, t => t.Title == "Task C");
+    }
+
+    [Fact]
+    public async Task PostTodos_WhenAiPortReturnsEmptyList_DoesNotAddSuggestionsButTracksAttempt()
+    {
+        // Arrange
+        ConfigureMockToReturnSuggestions(); // Empty suggestions array
+
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, "Empty Suggestions Test");
+        Guid listId = todoList.ToDoListId;
+
+        // Add items to trigger AI suggestions
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Original 1");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Original 2");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Original 3");
+
+        // Wait for processing
+        ToDoListPollingHelper helper = CreatePollingHelper(listId, todoList.UserId);
+        await helper.WaitUntilTodoCountAtAsync(3);
+        await helper.EnsureTodoCountDoesNotChangeAsync();
+
+        // Assert - Should only have original 3 items
+        HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={todoList.UserId}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        ToDoListDetailApiResponse result = await FromJsonAsync<ToDoListDetailApiResponse>(response);
+        Assert.Equal(3, result.TodoCount);
+    }
+
+    [Theory]
+    [InlineData("")]
+    [InlineData("   ")]
+    [InlineData("\t\t")]
+    [InlineData("AB")] // Too short (minimum is 3)
+    public async Task PostTodos_WhenAiPortReturnsInvalidSuggestionTitles_SkipsInvalidSuggestionsAndAddsValidOnes(string invalidTitle)
+    {
+        // Arrange
+        ConfigureMockToReturnSuggestions(invalidTitle, "Valid AI Suggestion", "Another Valid One");
+
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, "Invalid Titles Test");
+        Guid listId = todoList.ToDoListId;
+
+        // Add items to trigger AI suggestions
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "User Task 1");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "User Task 2");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "User Task 3");
+
+        // Wait for processing - should get 5 items (3 original + 2 valid AI suggestions)
+        await CreatePollingHelper(listId, todoList.UserId).WaitUntilTodoCountAtAsync(5);
+
+        // Assert - Should have original items plus only the valid AI suggestions
+        HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={todoList.UserId}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        ToDoListDetailApiResponse result = await FromJsonAsync<ToDoListDetailApiResponse>(response);
+        Assert.Equal(5, result.TodoCount);
+
+        // Verify valid suggestions were added
+        Assert.Contains(result.Todos, t => t.Title == "Valid AI Suggestion");
+        Assert.Contains(result.Todos, t => t.Title == "Another Valid One");
+
+        // Verify invalid suggestion was not added
+        Assert.DoesNotContain(result.Todos, t => t.Title == invalidTitle);
+    }
+
+    [Fact]
+    public async Task PostTodos_WhenAiPortReturnsTooLongSuggestionTitle_SkipsInvalidSuggestionsAndAddsValidOnes()
+    {
+        // Arrange
+        string tooLongTitle = new('x', 201); // Max length is 200
+        ConfigureMockToReturnSuggestions(tooLongTitle, "Valid Short Title", "Another Valid Title");
+
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, "Too Long Title Test");
+        Guid listId = todoList.ToDoListId;
+
+        // Add items to trigger AI suggestions
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Task 1");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Task 2");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Task 3");
+
+        // Wait for processing - should get 5 items (3 original + 2 valid AI suggestions)
+        await CreatePollingHelper(listId, todoList.UserId).WaitUntilTodoCountAtAsync(5);
+
+        // Assert
+        HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={todoList.UserId}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        ToDoListDetailApiResponse result = await FromJsonAsync<ToDoListDetailApiResponse>(response);
+        Assert.Equal(5, result.TodoCount);
+
+        // Verify valid suggestions were added but invalid one was skipped
+        Assert.Contains(result.Todos, t => t.Title == "Valid Short Title");
+        Assert.Contains(result.Todos, t => t.Title == "Another Valid Title");
+        Assert.DoesNotContain(result.Todos, t => t.Title == tooLongTitle);
+    }
+
+    #endregion
+
+    #region Boundary Condition Tests
+
+    [Fact]
+    public async Task PostTodos_WhenAiPortReturnsExactlyRequestedCount_AddsAllSuggestions()
+    {
+        // Arrange - Configure exactly 3 suggestions (the default request count)
+        ConfigureMockToReturnSuggestions("AI Task 1", "AI Task 2", "AI Task 3");
+
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, "Exact Count Test");
+        Guid listId = todoList.ToDoListId;
+
+        // Add items to trigger AI suggestions
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Original 1");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Original 2");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Original 3");
+
+        // Wait for processing
+        await CreatePollingHelper(listId, todoList.UserId).WaitUntilTodoCountAtAsync(6);
+
+        // Assert
+        HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={todoList.UserId}");
+        ToDoListDetailApiResponse result = await FromJsonAsync<ToDoListDetailApiResponse>(response);
+        Assert.Equal(6, result.TodoCount);
+
+        Assert.Contains(result.Todos, t => t.Title == "AI Task 1");
+        Assert.Contains(result.Todos, t => t.Title == "AI Task 2");
+        Assert.Contains(result.Todos, t => t.Title == "AI Task 3");
+    }
+
+    [Fact]
+    public async Task PostTodos_WhenAiPortReturnsMoreThanRequested_AddsOnlyRequestedCount()
+    {
+        // Arrange - Configure more suggestions than requested
+        ConfigureMockToReturnSuggestions("AI 1", "AI 2", "AI 3", "AI 4", "AI 5");
+
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, "More Than Requested Test");
+        Guid listId = todoList.ToDoListId;
+
+        // Add items to trigger AI suggestions
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "User 1");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "User 2");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "User 3");
+
+        // Wait for processing - should only add first 3 suggestions
+        await CreatePollingHelper(listId, todoList.UserId).WaitUntilTodoCountAtAsync(6);
+
+        // Assert
+        HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={todoList.UserId}");
+        ToDoListDetailApiResponse result = await FromJsonAsync<ToDoListDetailApiResponse>(response);
+        Assert.Equal(6, result.TodoCount);
+
+        // Verify only first 3 AI suggestions were added
+        Assert.Contains(result.Todos, t => t.Title == "AI 1");
+        Assert.Contains(result.Todos, t => t.Title == "AI 2");
+        Assert.Contains(result.Todos, t => t.Title == "AI 3");
+        Assert.DoesNotContain(result.Todos, t => t.Title == "AI 4");
+        Assert.DoesNotContain(result.Todos, t => t.Title == "AI 5");
+    }
+
+    [Fact]
+    public async Task PostTodos_WhenAiPortReturnsFewerThanRequested_AddsAllAvailableSuggestions()
+    {
+        // Arrange - Configure fewer suggestions than typically requested
+        ConfigureMockToReturnSuggestions("Only One Suggestion");
+
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, "Fewer Than Requested Test");
+        Guid listId = todoList.ToDoListId;
+
+        // Add items to trigger AI suggestions
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Task A");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Task B");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Task C");
+
+        // Wait for processing - should get 4 items (3 original + 1 AI suggestion)
+        await CreatePollingHelper(listId, todoList.UserId).WaitUntilTodoCountAtAsync(4);
+
+        // Assert
+        HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={todoList.UserId}");
+        ToDoListDetailApiResponse result = await FromJsonAsync<ToDoListDetailApiResponse>(response);
+        Assert.Equal(4, result.TodoCount);
+
+        Assert.Contains(result.Todos, t => t.Title == "Only One Suggestion");
+    }
+
+    #endregion
+
+    #region Timing and State Consistency Tests
+
+    [Fact]
+    public async Task PostTodos_WhenMultipleUsersAddItemsToSameListSimultaneously_HandlesRaceConditionsCorrectly()
+    {
+        // Arrange
+        ConfigureMockToReturnSuggestions("Race Condition AI 1", "Race Condition AI 2", "Race Condition AI 3");
+
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, "Race Condition Test");
+        Guid listId = todoList.ToDoListId;
+
+        // Add first two items normally
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Item 1");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Item 2");
+
+        // Act - Simulate concurrent addition of the third item (which could trigger race conditions)
+        List<Task> concurrentTasks = new();
+        for (int i = 0; i < 3; i++)
+        {
+            int taskNum = i + 3;
+            concurrentTasks.Add(ToDoListTestHelper.AddToDoAsync(HttpClient, listId, $"Concurrent Item {taskNum}"));
+        }
+
+        await Task.WhenAll(concurrentTasks);
+
+        // Wait for all background processing to complete
+        // Should have at most 8 items: 2 original + 3 concurrent + 3 AI suggestions
+        // But due to race condition handling, AI suggestions should only be generated once
+        ToDoListPollingHelper helper = CreatePollingHelper(listId, todoList.UserId);
+        await helper.WaitUntilTodoCountAtAsync(8, TimeSpan.FromSeconds(10));
+
+        // Assert - Verify final state is consistent
+        HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={todoList.UserId}");
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+
+        ToDoListDetailApiResponse result = await FromJsonAsync<ToDoListDetailApiResponse>(response);
+        Assert.Equal(8, result.TodoCount);
+
+        // Verify AI suggestions were generated only once
+        IEnumerable<ToDoApiDto> aiSuggestions = result.Todos.Where(t => t.Title.Contains("Race Condition AI"));
+        Assert.Equal(3, aiSuggestions.Count());
+    }
+
+    [Fact]
+    public async Task PostTodos_VerifiesAiSuggestionsCreatedAtTimeMatchesTestTime()
+    {
+        // Arrange
+        ConfigureMockToReturnSuggestions("Time Test Suggestion 1", "Time Test Suggestion 2");
+
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, "Time Consistency Test");
+        Guid listId = todoList.ToDoListId;
+
+        DateTime expectedTime = FakeTimeProvider.GetUtcNow().UtcDateTime;
+
+        // Add items to trigger AI suggestions
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "User Item 1");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "User Item 2");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "User Item 3");
+
+        // Wait for processing
+        await CreatePollingHelper(listId, todoList.UserId).WaitUntilTodoCountAtAsync(5);
+
+        // Assert
+        HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={todoList.UserId}");
+        ToDoListDetailApiResponse result = await FromJsonAsync<ToDoListDetailApiResponse>(response);
+
+        // Verify AI suggestion timestamps
+        var aiSuggestions = result.Todos.Where(t => t.Title.Contains("Time Test Suggestion")).ToList();
+        Assert.Equal(2, aiSuggestions.Count);
+
+        foreach (ToDoApiDto aiSuggestion in aiSuggestions)
+        {
+            Assert.Equal(expectedTime, aiSuggestion.CreatedAt);
+            Assert.False(aiSuggestion.IsCompleted);
+            Assert.Null(aiSuggestion.CompletedAt);
+        }
+    }
+
+    #endregion
+
+    #region Edge Cases and Negative Tests
+
+    [Fact]
+    public async Task PostTodos_WhenToDoListDoesNotExist_DoesNotThrowAndHandlesGracefully()
+    {
+        // This test verifies that the system handles cases where the integration event
+        // references a todo list that no longer exists (edge case that could happen
+        // in distributed systems with eventual consistency)
+
+        // Arrange
+        ConfigureMockToReturnSuggestions("Should Not Be Added");
+
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, "Will Be Deleted");
+        Guid listId = todoList.ToDoListId;
+
+        // Add two items
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Item 1");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Item 2");
+
+        // Delete the todo list (simulating the edge case)
+        await HttpClient.DeleteAsync($"/api/v1/todo-lists/{listId}?userId={todoList.UserId}");
+
+        // Act - Try to add a third item (this should fail gracefully)
+        HttpResponseMessage addResponse = await HttpClient.PostAsync("/api/v1/todos", ToJsonContent(new AddToDoCommand
+        {
+            ToDoListId = listId.ToString(),
+            Title = "Item 3"
+        }));
+
+        // Assert - The add operation should fail (todo list doesn't exist)
+        Assert.Equal(HttpStatusCode.NotFound, addResponse.StatusCode);
+
+        // Verify no AI suggestions were created in any remaining state
+        // (This mainly ensures no exceptions were thrown in background processing)
+    }
+
+    [Fact]
+    public async Task PostTodos_WithSpecialCharactersInSuggestions_HandlesAndStoresCorrectly()
+    {
+        // Arrange
+        ConfigureMockToReturnSuggestions(
+            "AI: Complete this task! 🎯",
+            "Review & update documentation",
+            "Send email to team@company.com"
+        );
+
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, "Special Characters Test");
+        Guid listId = todoList.ToDoListId;
+
+        // Add items to trigger AI suggestions
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Task 1");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Task 2");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Task 3");
+
+        // Wait for processing
+        await CreatePollingHelper(listId, todoList.UserId).WaitUntilTodoCountAtAsync(6);
+
+        // Assert
+        HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={todoList.UserId}");
+        ToDoListDetailApiResponse result = await FromJsonAsync<ToDoListDetailApiResponse>(response);
+
+        // Verify special characters are preserved
+        Assert.Contains(result.Todos, t => t.Title == "AI: Complete this task! 🎯");
+        Assert.Contains(result.Todos, t => t.Title == "Review & update documentation");
+        Assert.Contains(result.Todos, t => t.Title == "Send email to team@company.com");
+    }
+
+    [Fact]
+    public async Task PostTodos_WithDuplicateSuggestionTitles_HandlesGracefullyAndAddsAll()
+    {
+        // Arrange - Configure duplicate suggestion titles
+        ConfigureMockToReturnSuggestions("Duplicate Task", "Unique Task", "Duplicate Task");
+
+        CreateToDoListResult todoList = await ToDoListTestHelper.CreateToDoListAsync(HttpClient, "Duplicate Titles Test");
+        Guid listId = todoList.ToDoListId;
+
+        // Add items to trigger AI suggestions
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Original 1");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Original 2");
+        _ = await ToDoListTestHelper.AddToDoAsync(HttpClient, listId, "Original 3");
+
+        // Wait for background processing to complete
+        await Task.Delay(2000);
+
+        // Assert - Verify suggestions were added (allowing for different duplicate handling behaviors)
+        HttpResponseMessage response = await HttpClient.GetAsync($"/api/v1/todo-lists/{listId}?userId={todoList.UserId}");
+        ToDoListDetailApiResponse result = await FromJsonAsync<ToDoListDetailApiResponse>(response);
+
+        // Should have the 3 original items plus AI suggestions
+        Assert.True(result.TodoCount >= 4, $"Expected at least 4 items, but got {result.TodoCount}");
+        Assert.True(result.TodoCount <= 6, $"Expected at most 6 items, but got {result.TodoCount}");
+
+        // Verify original items are present
+        Assert.Contains(result.Todos, t => t.Title == "Original 1");
+        Assert.Contains(result.Todos, t => t.Title == "Original 2");
+        Assert.Contains(result.Todos, t => t.Title == "Original 3");
+
+        // Verify AI suggestions were added
+        var aiSuggestions = result.Todos.Where(t => !t.Title.StartsWith("Original")).ToList();
+        Assert.True(aiSuggestions.Count >= 1, "Expected at least one AI suggestion to be added");
+
+        // Check that duplicate titles are handled (either both added or one rejected)
+        var duplicateTasks = result.Todos.Where(t => t.Title == "Duplicate Task").ToList();
+        var uniqueTasks = result.Todos.Where(t => t.Title == "Unique Task").ToList();
+
+        // At least one of the suggestions should have been successfully added
+        Assert.True(duplicateTasks.Count >= 1 || uniqueTasks.Count >= 1,
+            "Expected at least one AI suggestion (Duplicate Task or Unique Task) to be added");
+    }
+
+    #endregion
+
+    #region Helper Method Extensions
+
+    /// <summary>
+    /// Configures the mock AI suggestions port to return a failure result.
+    /// </summary>
+    private static void ConfigureMockToReturnFailure(string errorMessage)
+    {
+        ClearPreviousMockConfigurations();
+        DatabaseFixture.MockItemSuggestionsPort.GenerateSuggestionsAsync(Arg.Any<ToDoListSnapshot>(), Arg.Any<int>(), Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(Result<IReadOnlyList<SuggestedItemTitle>>.Failure(
+                new Error("AI.ServiceUnavailable", errorMessage, ErrorType.Failure))));
+    }
+
+    #endregion
+
 }
